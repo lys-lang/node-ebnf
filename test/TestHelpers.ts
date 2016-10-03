@@ -36,6 +36,9 @@ export function testParseToken(parser: Parser, txt: string, target?: string) {
 
       if (result.text.length == 0)
         throw new Error('Empty text result');
+
+      if (result.rest.length != 0)
+        throw new Error('Got rest: ' + result.rest);
     } catch (e) {
       console.log(txt + '\n' + inspect(result, false, 20, true));
       throw e;

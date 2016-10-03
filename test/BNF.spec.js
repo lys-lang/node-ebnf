@@ -18,14 +18,13 @@ describe('Parse BNF', function () {
     TestHelpers_1.testParseToken(lispParser, '(test a)');
 });
 describe('Parse custom calculator', function () {
-    var calc = "\n    <Equation>         ::= <BinaryOperation> | <Term>\n    <Term>             ::= \"(\" <RULE_WHITESPACE> <BinaryOperation> <RULE_WHITESPACE> \")\" | \"(\" <RULE_WHITESPACE> <Number> <RULE_WHITESPACE> \")\" | <RULE_WHITESPACE> <Number> <RULE_WHITESPACE>\n    <BinaryOperation>  ::= <Term> <RULE_WHITESPACE> <Operator> <RULE_WHITESPACE> <Term>\n\n    <Number>           ::= <RULE_NEGATIVE> <RULE_NON_ZERO> <RULE_NUMBER_LIST> | <RULE_NON_ZERO> <RULE_NUMBER_LIST> | <RULE_DIGIT>\n    <Operator>         ::= \"+\" | \"-\" | \"*\" | \"/\" | \"^\"\n\n    <RULE_NUMBER_LIST> ::= <RULE_DIGIT> <RULE_NUMBER_LIST> | <RULE_DIGIT>\n    <RULE_NEGATIVE>    ::= \"-\"\n    <RULE_NON_ZERO>    ::= \"1\" | \"2\" | \"3\" | \"4\" | \"5\" | \"6\" | \"7\" | \"8\" | \"9\"\n    <RULE_DIGIT>       ::= \"0\" | <RULE_NON_ZERO>\n    <RULE_WHITESPACE>  ::= <RULE_WS> | \"\"\n    <RULE_WS>          ::= \" \" <RULE_WHITESPACE> | <EOL> <RULE_WHITESPACE> | \" \" | <EOL>\n  ";
+    var calc = "\n    <Equation>         ::= <BinaryOperation> | <Term>\n    <Term>             ::= \"(\" <RULE_WHITESPACE> <Equation> <RULE_WHITESPACE> \")\" | \"(\" <RULE_WHITESPACE> <Number> <RULE_WHITESPACE> \")\" | <RULE_WHITESPACE> <Number> <RULE_WHITESPACE>\n    <BinaryOperation>  ::= <Term> <RULE_WHITESPACE> <Operator> <RULE_WHITESPACE> <Term>\n\n    <Number>           ::= <RULE_NEGATIVE> <RULE_NON_ZERO> <RULE_NUMBER_LIST> | <RULE_NON_ZERO> <RULE_NUMBER_LIST> | <RULE_DIGIT>\n    <Operator>         ::= \"+\" | \"-\" | \"*\" | \"/\" | \"^\"\n\n    <RULE_NUMBER_LIST> ::= <RULE_DIGIT> <RULE_NUMBER_LIST> | <RULE_DIGIT>\n    <RULE_NEGATIVE>    ::= \"-\"\n    <RULE_NON_ZERO>    ::= \"1\" | \"2\" | \"3\" | \"4\" | \"5\" | \"6\" | \"7\" | \"8\" | \"9\"\n    <RULE_DIGIT>       ::= \"0\" | <RULE_NON_ZERO>\n    <RULE_WHITESPACE>  ::= <RULE_WS> | \"\"\n    <RULE_WS>          ::= \" \" <RULE_WHITESPACE> | <EOL> <RULE_WHITESPACE> | \" \" | <EOL>\n  ";
     var calcuParser;
     it('creates a calculator parser', function () {
         calcuParser = new dist_1.Grammars.BNF.Parser(calc, {});
         TestHelpers_1.printBNF(calcuParser);
     });
     calcuParser = new dist_1.Grammars.BNF.Parser(calc, {});
-    calcuParser.debug = true;
     TestHelpers_1.testParseToken(calcuParser, '1');
     TestHelpers_1.testParseToken(calcuParser, '0');
     TestHelpers_1.testParseToken(calcuParser, '(1)');

@@ -73,7 +73,7 @@ function stripRules(token: IToken) {
   }
 }
 export class Parser {
-  debug = true;
+  debug = false;
 
   constructor(public grammarRules: IRule[], public options) {
 
