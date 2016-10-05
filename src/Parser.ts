@@ -77,7 +77,28 @@ export class Parser {
   debug = false;
 
   constructor(public grammarRules: IRule[], public options) {
+    let errors = [];
 
+    grammarRules.forEach(rule => {
+      rule.bnf.forEach(options => {
+        if (typeof options[0] == 'string' && (
+          options[0] == rule.name
+          || options[0] == rule.name + '+'
+          || options[0] == rule.name + '*'
+          || options[0] == rule.name + '?'
+        )) {
+          let error = 'Left recursion is not allowed, on rule ' + rule.name;
+
+          if (errors.indexOf(error) == -1)
+            errors.push(error);
+
+          options[0] = '"%%%%%"';
+        }
+      });
+    });
+
+    if (errors.length)
+      console.log(errors.join('\n'));
   }
 
   getAST(txt: string, target?: string) {

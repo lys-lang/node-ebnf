@@ -41,11 +41,11 @@ describe('JSON 2', () => {
     });
   });
 
-  describe.only('Grammars.W3C parses JSON grammar', function () {
+  describe('Grammars.W3C parses JSON grammar', function () {
     let RULES = Grammars.W3C.getRules(grammar);
     console.log('JSON:\n' + inspect(RULES, false, 20, true));
     let parser = new Parser(RULES, {});
-    parser.debug = true;
+
     printBNF(parser);
 
     testParseToken(parser, JSON.stringify(true));
