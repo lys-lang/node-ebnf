@@ -1,24 +1,22 @@
 // https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_Form
 
 /*
-<syntax>         ::= <rule> | <rule> <syntax>
-<rule>           ::= <opt-whitespace> "<" <rule-name> ">" <opt-whitespace> "::=" <opt-whitespace> <expression> <RULE_EOL>
-<opt-whitespace> ::= " " <opt-whitespace> | ""
-<expression>     ::= <list> | <list> <opt-whitespace> "|" <opt-whitespace> <expression>
-<RULE_EOL>       ::= <opt-whitespace> <RULE_EOL> | <RULE_EOL> <RULE_EOL>
-<list>           ::= <term> | <term> <opt-whitespace> <list>
-<term>           ::= <literal> | "<" <rule-name> ">"
-<literal>        ::= '"' <text1> '"' | "'" <text2> "'"
-<text1>          ::= "" | <RULE_CHARACTER1> <text1>
-<text2>          ::= "" | <RULE_CHARACTER2> <text2>
-<RULE_CHARACTER>      ::= <RULE_LETTER> | <RULE_DIGIT> | <RULE_SYMBOL>
-<RULE_LETTER>         ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-<RULE_DIGIT>          ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-<RULE_SYMBOL>         ::= "-" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~"
-<RULE_CHARACTER1>     ::= <RULE_CHARACTER> | "'"
-<RULE_CHARACTER2>     ::= <RULE_CHARACTER> | '"'
-<rule-name>      ::= <RULE_LETTER> | <rule-name> <RULE_CHAR>
-<RULE_CHAR>      ::= <RULE_LETTER> | <RULE_DIGIT> | "-"
+syntax ::= RULE_EOL* rule+
+rule ::= " "* "<" rule-name ">" " "* "::=" firstExpression otherExpression* " "* RULE_EOL+ " "*
+firstExpression ::= " "* list
+otherExpression ::= " "* "|" " "* list
+RULE_EOL ::= "\r" | "\n"
+list ::= term " "* list | term
+term ::= literal | "<" rule-name ">"
+literal ::= '"' RULE_CHARACTER1* '"' | "'" RULE_CHARACTER2* "'"
+RULE_CHARACTER ::= " " | RULE_LETTER | RULE_DIGIT | RULE_SYMBOL
+RULE_LETTER ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+RULE_DIGIT ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+RULE_SYMBOL ::= "-" | "_" | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | "<" | "=" | ">" | "?" | "@" | "[" | "\" | "]" | "^" | "_" | "`" | "{" | "|" | "}" | "~"
+RULE_CHARACTER1 ::= RULE_CHARACTER | "'"
+RULE_CHARACTER2 ::= RULE_CHARACTER | '"'
+rule-name ::= RULE_LETTER RULE_CHAR*
+RULE_CHAR ::= RULE_LETTER | RULE_DIGIT | "_" | "-"
 */
 
 import { findChildrenByType } from '../SemanticHelpers';

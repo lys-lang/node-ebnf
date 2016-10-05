@@ -1,13 +1,43 @@
 "use strict";
 var inspect = require('util').inspect;
+var decorationRE = /(\?|\+|\*)$/;
+var subExpressionRE = /^%/;
+function getBNFRule(name, parser) {
+    if (typeof name == 'string') {
+        var decoration = decorationRE.exec(name);
+        var decorationText = decoration ? decoration[0] + ' ' : '';
+        var subexpression = subExpressionRE.test(name);
+        var cleanName = name.replace(decorationRE, '');
+        if (subexpression) {
+            return '(' + getBNFBody(name, parser) + ')' + decorationText;
+        }
+        return name;
+    }
+    else {
+        return name.source
+            .replace(/^\\(?:x|u)([a-zA-Z0-9]+)$/, '#x$1')
+            .replace(/^\[\\(?:x|u)([a-zA-Z0-9]+)-\\(?:x|u)([a-zA-Z0-9]+)\]$/, '[#x$1-#x$2]');
+    }
+}
+function grtBNFChoice(rules, parser) {
+    return rules.map(function (x) { return getBNFRule(x, parser); }).join(' ');
+}
+function getBNFBody(name, parser) {
+    for (var i = 0; i < parser.grammarRules.length; i++) {
+        var rule = parser.grammarRules[i];
+        name = name.replace(decorationRE, '');
+        if (rule && rule.name == name) {
+            return rule.bnf.map(function (x) { return grtBNFChoice(x, parser); }).join(' | ');
+        }
+    }
+    return 'RULE_NOT_FOUND{' + name + '}';
+}
 function printBNF(parser) {
     console.log('BNF:');
     parser.grammarRules.forEach(function (l) {
-        console.log(l.name + ' ::= ' + l.bnf.map(function (options) {
-            if (!options)
-                return inspect('ERROR, MISSING OPTIONS', false, 1, true);
-            return options.join(' ');
-        }).join(' | '));
+        if (!(/^%/.test(l.name))) {
+            console.log(l.name + ' ::= ' + getBNFBody(l.name, parser));
+        }
     });
     console.log('Expr:');
     parser.grammarRules.forEach(function (l) {
@@ -18,6 +48,7 @@ exports.printBNF = printBNF;
 function testParseToken(parser, txt, target) {
     it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), function () {
         var result = parser.getAST(txt, target);
+        parser.debug && console.log(txt + '\n' + inspect(result, false, 20, true));
         try {
             if (!result)
                 throw new Error('Did not resolve');
@@ -29,7 +60,7 @@ function testParseToken(parser, txt, target) {
                 throw new Error('Got rest: ' + result.rest);
         }
         catch (e) {
-            console.log(txt + '\n' + inspect(result, false, 20, true));
+            parser.debug || console.log(txt + '\n' + inspect(result, false, 20, true));
             throw e;
         }
         describeTree(result);

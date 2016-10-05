@@ -4,10 +4,11 @@ declare var global;
 
 import { TokenError } from './TokenError';
 
+export type RulePrimary = string | RegExp;
+
 export interface IRule {
   name: string;
-  expr?: RegExp;
-  bnf: string[][];
+  bnf: RulePrimary[][];
 }
 
 export interface IToken {
@@ -24,6 +25,7 @@ export interface IToken {
 
 export function readToken(txt: string, expr: RegExp): IToken {
   let result = expr.exec(txt);
+
   if (result && result.index == 0) {
     if (result[0].length == 0 && expr.source.length > 0) return null;
     return {
@@ -61,7 +63,7 @@ function fixPositions(token: IToken, start: number) {
 /// Removes all the nodes starting with 'RULE_'
 function stripRules(token: IToken) {
   if (token.children) {
-    let localRules = token.children.filter(x => x.type && x.type.indexOf('RULE_') == 0);
+    let localRules = token.children.filter(x => x.type && (x.type.indexOf('RULE_') == 0 || x.type.indexOf('%') == 0));
     for (let i = 0; i < localRules.length; i++) {
       let indexOnChildren = token.children.indexOf(localRules[i]);
       if (indexOnChildren != -1) {
@@ -81,7 +83,7 @@ export class Parser {
 
   getAST(txt: string, target?: string) {
     if (!target) {
-      target = this.grammarRules[0].name;
+      target = this.grammarRules.filter(x => x.name.indexOf('RULE_') != 0 && x.name.indexOf('%') != 0)[0].name;
     }
 
     let result = this.parse(txt, target);
@@ -114,7 +116,7 @@ export class Parser {
 
     let expr: RegExp;
 
-    let printable = this.debug && type.indexOf('"') != 0 && type.indexOf('RULE_') != 0 && type.indexOf("'") != 0;
+    let printable = this.debug || this.debug && type.indexOf('"') != 0 && type.indexOf('RULE_') != 0 && type.indexOf("'") != 0;
 
     printable && console.log(new Array(recursion).join('│  ') + 'Trying to get ' + target + ' from ' + JSON.stringify(txt.split('\n')[0]));
 
@@ -154,9 +156,6 @@ export class Parser {
 
         expr = new RegExp(escapeRegExp(src));
         realType = null;
-      } else {
-
-        expr = targetLex.expr;
       }
     } catch (e) {
       return null;
@@ -196,42 +195,75 @@ export class Parser {
 
           for (let i = 0; i < phases.length; i++) {
             let localTarget = phases[i];
-            let isOptional = /(\*|\?)$/.test(localTarget);
-            let allowRepetition = /(\*|\+)$/.test(localTarget);
-            let atLeastOne = /\+$/.test(localTarget);
 
-            allOptional = allOptional && isOptional;
+            if (typeof localTarget == "string") {
+              let isOptional = /(\*|\?)$/.test(localTarget);
+              let allowRepetition = /(\*|\+)$/.test(localTarget);
+              let atLeastOne = /\+$/.test(localTarget);
 
-            let got: IToken;
+              allOptional = allOptional && isOptional;
 
-            let foundAtLeastOne = false;
+              let got: IToken;
 
-            do {
-              got = this.parse(tmpTxt, localTarget, recursion + 1);
+              let foundAtLeastOne = false;
 
-              if (!got && isOptional) continue;
+              do {
+                got = this.parse(tmpTxt, localTarget, recursion + 1);
+
+                if (!got && isOptional) continue;
+
+                if (!got) {
+                  if (foundAtLeastOne && atLeastOne ? tmp : null)
+                    break;
+                  return;
+                }
+
+                foundAtLeastOne = true;
+                foundSomething = true;
+
+                if (got.type == '%%EMPTY%%') {
+                  break;
+                }
+
+                got.start += position;
+                got.end += position;
+
+                if (got.type) {
+                  if (got.type.indexOf('%') == 0) {
+                    got.children && got.children.forEach(x => {
+                      x.start += position;
+                      x.end += position;
+                      x.parent = tmp;
+                      tmp.children.push(x);
+                    });
+                  } else {
+                    got.parent = tmp;
+                    tmp.children.push(got);
+                  }
+                  // printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.text);
+                }
+
+                tmp.text = tmp.text + got.text;
+                tmp.end = tmp.text.length;
+
+                tmpTxt = tmpTxt.substr(got.text.length);
+                position += got.text.length;
+
+                tmp.rest = tmpTxt;
+              } while (got && allowRepetition && tmpTxt.length);
+            } else {
+              let got = readToken(tmpTxt, localTarget);
 
               if (!got) {
-                if (foundAtLeastOne && atLeastOne ? tmp : null)
-                  break;
                 return;
               }
 
-              foundAtLeastOne = true;
-              foundSomething = true;
+              // printable && console.log(new Array(recursion + 1).join('│  ') + '└> ' + got.text);
 
-              if (got.type == '%%EMPTY%%') {
-                break;
-              }
+              foundSomething = true;
 
               got.start += position;
               got.end += position;
-
-              if (got.type) {
-                got.parent = tmp;
-                tmp.children.push(got);
-                printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.text);
-              }
 
               tmp.text = tmp.text + got.text;
               tmp.end = tmp.text.length;
@@ -240,11 +272,12 @@ export class Parser {
               position += got.text.length;
 
               tmp.rest = tmpTxt;
-            } while (got && allowRepetition && tmpTxt.length);
+            }
           }
 
           if (foundSomething) {
             out = tmp;
+            printable && console.log(new Array(recursion).join('│  ') + '├<─┴< PUSHING ' + out.type + " " + JSON.stringify(out.text));
           }
         });
       }
