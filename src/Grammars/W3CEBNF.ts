@@ -172,7 +172,18 @@ namespace BNF {
           break;
         case 'CharCode':
         case 'CharClass':
-          bnfSeq.push(convertRegex(x.text + decoration));
+          if (decoration) {
+            let newRule = {
+              name: '%' + (parentName + (subitems++)),
+              bnf: [[convertRegex(x.text)]]
+            };
+
+            tmpRules.push(newRule);
+
+            bnfSeq.push(newRule.name + decoration);
+          } else {
+            bnfSeq.push(convertRegex(x.text));
+          }
           break;
         case 'PrimaryDecoration':
           break;
@@ -211,11 +222,11 @@ namespace BNF {
     let tmpRules = [];
 
     ast.children
-    .filter(x => x.type == 'Production')
-    .map((x: any) => {
-      let name = x.children.filter(x => x.type == 'NCName')[0].text;
-      createRule(tmpRules, x, name);
-    });
+      .filter(x => x.type == 'Production')
+      .map((x: any) => {
+        let name = x.children.filter(x => x.type == 'NCName')[0].text;
+        createRule(tmpRules, x, name);
+      });
 
     return tmpRules;
   }

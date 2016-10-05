@@ -34,3 +34,4 @@ describe('Parse custom calculator', function () {
     TestHelpers_1.testParseToken(calcuParser, '(2 + 2) * (5)');
     TestHelpers_1.testParseToken(calcuParser, '(2 + (2 * -123)) * 5332');
 });
+//# sourceMappingURL=BNF.spec.js.map

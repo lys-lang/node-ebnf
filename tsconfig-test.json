@@ -7,7 +7,7 @@
     "experimentalDecorators": true,
     "inlineSourceMap": false,
     "inlineSources": false,
-    "sourceMap": false,
+    "sourceMap": true,
     "types": []
   },
   "exclude": [

@@ -24,8 +24,8 @@ function getBNFRule(name: string | RegExp, parser: Parser): string {
     return name;
   } else {
     return name.source
-      .replace(/^\\(?:x|u)([a-zA-Z0-9]+)$/, '#x$1')
-      .replace(/^\[\\(?:x|u)([a-zA-Z0-9]+)-\\(?:x|u)([a-zA-Z0-9]+)\]$/, '[#x$1-#x$2]');
+      .replace(/\\(?:x|u)([a-zA-Z0-9]+)/g, '#x$1')
+      .replace(/\[\\(?:x|u)([a-zA-Z0-9]+)-\\(?:x|u)([a-zA-Z0-9]+)\]/g, '[#x$1-#x$2]');
   }
 }
 
@@ -52,13 +52,6 @@ export function printBNF(parser: Parser) {
       console.log(l.name + ' ::= ' + getBNFBody(l.name, parser));
     }
   });
-
-  console.log('Expr:');
-
-  parser.grammarRules.forEach(l => {
-    (l as any).expr && console.log('  ' + l.name + ': ' + inspect((l as any).expr, false, 2, true));
-  });
-
 }
 
 

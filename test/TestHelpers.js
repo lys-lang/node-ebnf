@@ -15,8 +15,8 @@ function getBNFRule(name, parser) {
     }
     else {
         return name.source
-            .replace(/^\\(?:x|u)([a-zA-Z0-9]+)$/, '#x$1')
-            .replace(/^\[\\(?:x|u)([a-zA-Z0-9]+)-\\(?:x|u)([a-zA-Z0-9]+)\]$/, '[#x$1-#x$2]');
+            .replace(/\\(?:x|u)([a-zA-Z0-9]+)/g, '#x$1')
+            .replace(/\[\\(?:x|u)([a-zA-Z0-9]+)-\\(?:x|u)([a-zA-Z0-9]+)\]/g, '[#x$1-#x$2]');
     }
 }
 function grtBNFChoice(rules, parser) {
@@ -38,10 +38,6 @@ function printBNF(parser) {
         if (!(/^%/.test(l.name))) {
             console.log(l.name + ' ::= ' + getBNFBody(l.name, parser));
         }
-    });
-    console.log('Expr:');
-    parser.grammarRules.forEach(function (l) {
-        l.expr && console.log('  ' + l.name + ': ' + inspect(l.expr, false, 2, true));
     });
 }
 exports.printBNF = printBNF;
@@ -80,3 +76,4 @@ function describeTree(token) {
     printDescription(token, token.text.length);
 }
 exports.describeTree = describeTree;
+//# sourceMappingURL=TestHelpers.js.map

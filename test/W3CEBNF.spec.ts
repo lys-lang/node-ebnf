@@ -5,15 +5,8 @@ import { testParseToken, describeTree, printBNF } from './TestHelpers';
 
 let inspect = require('util').inspect;
 
-let lexer = Grammars.W3C.RULES;
-let parser = new Parser(Grammars.W3C.RULES, {});
 
-printBNF(parser);
-
-parser.debug = true;
-
-describe('Parse W3CEBNF', () => {
-  let grammar = `
+let grammar = `
 Grammar ::= RULE_S* (Production RULE_S*)*
 Production ::= NCName RULE_S* "::=" RULE_Whitespace* (SequenceOrDifference (RULE_Whitespace* "|" RULE_Whitespace* SequenceOrDifference)* ) RULE_Whitespace* RULE_EOL+ RULE_S*
 NCName ::= [a-zA-Z][a-zA-Z_0-9]*
@@ -26,34 +19,29 @@ CharCode ::= "#x" [0-9a-zA-Z]+
 CharClass ::= '[' '^'? (CharCodeRange | CharRange | CharCode | RULE_Char)+  "]"
 RULE_Char ::= #x09 | #x0A | #x0D | [#x20-#x5c] | [#x5e-#xD7FF] | [#xE000-#xFFFD]
 CharRange ::= RULE_Char "-" RULE_Char
-CharCodeRange ::= CharCode "-" CharCode
+CharCodeRange ::= CharCode "-" CharCode /* comentarios */
 RULE_Whitespace ::= (#x09 | #x20)*  | Comment RULE_Whitespace*
 RULE_S ::= RULE_Whitespace RULE_S* | RULE_EOL RULE_S*
 Comment ::= "/*" ([^*] | "*"+ [^\/]*)*  "*/"
 RULE_EOL ::= #x0D #x0A | #x0A | #x0D
   `;
 
-  let lispParser: Parser;
+
+describe('Parse W3CEBNF', () => {
+  let parser: Parser;
 
   it('create parser', () => {
-    lispParser = new Parser(lexer, {});
-
-    printBNF(lispParser);
-
-    testParseToken(lispParser, grammar);
+    parser = new Parser(Grammars.W3C.RULES, {});
+    testParseToken(parser, grammar);
   });
+});
 
-  lispParser = new Parser(lexer, {});
-  // lispParser.debug = true;
-
-  testParseToken(lispParser, grammar);
-
-  let ruleset = lispParser.getAST(grammar);
+describe('Grammars.W3C parses itself', function () {
+  let parser = new Parser(Grammars.W3C.RULES, {});
 
   let RULES = Grammars.W3C.getRules(grammar);
 
-  lispParser = new Parser(RULES, {});
-  lispParser.debug = true;
+  parser = new Parser(RULES, {});
 
-  testParseToken(lispParser, grammar);
+  testParseToken(parser, grammar);
 });

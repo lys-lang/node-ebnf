@@ -48,7 +48,6 @@ function escapeRegExp(str) {
   return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
 }
 
-
 function fixRest(token: IToken) {
   token.rest = '';
   token.children && token.children.forEach(c => fixRest(c));
@@ -196,6 +195,8 @@ export class Parser {
           for (let i = 0; i < phases.length; i++) {
             let localTarget = phases[i];
 
+            if ('"0"' == localTarget && tmpTxt == '1.01e+124') debugger;
+
             if (typeof localTarget == "string") {
               let isOptional = /(\*|\?)$/.test(localTarget);
               let allowRepetition = /(\*|\+)$/.test(localTarget);
@@ -210,7 +211,8 @@ export class Parser {
               do {
                 got = this.parse(tmpTxt, localTarget, recursion + 1);
 
-                if (!got && isOptional) continue;
+                if (!got && isOptional)
+                  break;
 
                 if (!got) {
                   if (foundAtLeastOne && atLeastOne ? tmp : null)
@@ -240,8 +242,8 @@ export class Parser {
                     got.parent = tmp;
                     tmp.children.push(got);
                   }
-                  // printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.text);
                 }
+                printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.text);
 
                 tmp.text = tmp.text + got.text;
                 tmp.end = tmp.text.length;
@@ -252,7 +254,13 @@ export class Parser {
                 tmp.rest = tmpTxt;
               } while (got && allowRepetition && tmpTxt.length);
             } else {
+              // let isOptional = /(\*|\?)$/.test(localTarget.source);
+              // let allowRepetition = /(\*|\+)$/.test(localTarget.source);
+              // let atLeastOne = /\+$/.test(localTarget.source);
               let got = readToken(tmpTxt, localTarget);
+
+              // if (!got && isOptional)
+              //  break;
 
               if (!got) {
                 return;
