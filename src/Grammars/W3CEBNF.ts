@@ -129,6 +129,75 @@ namespace BNF {
     return terms;
   }
 
+  let subitems = 0;
+
+  function restar(total, resta) {
+    console.log('reberia restar ' + resta + ' a ' + total);
+  }
+
+  function convertRegex(txt: string): RegExp {
+    return new RegExp(txt
+      .replace(/#x([a-zA-Z0-9]{4})/g, '\\u$1')
+      .replace(/#x([a-zA-Z0-9]{3})/g, '\\u0$1')
+      .replace(/#x([a-zA-Z0-9]{2})/g, '\\x$1')
+      .replace(/#x([a-zA-Z0-9]{1})/g, '\\x0$1')
+    );
+  }
+
+  function getSubItems(tmpRules, seq: IToken, parentName: string) {
+    let anterior = null;
+    let bnfSeq = [];
+
+    seq.children.forEach((x, i) => {
+      if (x.type == 'Minus') {
+        restar(anterior, x);
+      } else {
+
+      }
+
+      let decoration: any = seq.children[i + 1];
+      decoration = decoration && decoration.type == 'PrimaryDecoration' && decoration.text || '';
+
+      switch (x.type) {
+        case 'SubItem':
+          let name = '%' + (parentName + (subitems++));
+
+          createRule(tmpRules, x, name);
+
+          bnfSeq.push(name + decoration);
+          break;
+        case 'NCName':
+        case 'StringLiteral':
+          bnfSeq.push(x.text + decoration);
+          break;
+        case 'CharCode':
+        case 'CharClass':
+          bnfSeq.push(convertRegex(x.text + decoration));
+          break;
+        case 'PrimaryDecoration':
+          break;
+        default:
+          console.log(' HOW SHOULD I PARSE THIS? ', x);
+      }
+
+      anterior = x;
+    });
+
+    return bnfSeq;
+  }
+
+  function createRule(tmpRules: any[], token: IToken, name: string) {
+    console.log(name);
+
+    let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
+
+    let rule = {
+      name,
+      bnf
+    };
+
+    tmpRules.push(rule);
+  }
 
   export function getRules(source: string): IRule[] {
     let ast = parser.getAST(source);
@@ -139,35 +208,16 @@ namespace BNF {
       throw ast.errors[0];
     }
 
-    let rules = findChildrenByType(ast, 'Production');
+    let tmpRules = [];
 
-    let ret = rules.map(rule => {
-      let name = findChildrenByType(rule, 'NCName')[0].text;
-
-      let expressions =
-        findChildrenByType(rule, 'firstExpression')
-          .concat(findChildrenByType(rule, 'otherExpression'));
-
-      let bnf = [];
-
-      expressions.forEach(expr => {
-        bnf.push(getAllTerms(expr));
-      });
-
-      return {
-        name: name,
-        bnf
-      };
+    ast.children
+    .filter(x => x.type == 'Production')
+    .map((x: any) => {
+      let name = x.children.filter(x => x.type == 'NCName')[0].text;
+      createRule(tmpRules, x, name);
     });
 
-    if (!ret.some(x => x.name == 'EOL')) {
-      ret.push({
-        name: 'EOL',
-        bnf: [['"\\r\\n"', '"\\r"', '"\\n"']]
-      });
-    }
-
-    return ret;
+    return tmpRules;
   }
 
   export function Transform(source: TemplateStringsArray): IRule[] {
