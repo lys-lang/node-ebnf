@@ -46,3 +46,5 @@ dist
 
 src/typings
 test/typings
+
+test/DW.*

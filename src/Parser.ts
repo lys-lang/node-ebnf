@@ -2,6 +2,10 @@
 
 declare var global;
 
+const UPPER_SNAKE_RE = /^[A-Z0-9_]+$/;
+const decorationRE = /(\?|\+|\*)$/;
+const preDecorationRE = /^(&|!)/;
+
 import { TokenError } from './TokenError';
 
 export type RulePrimary = string | RegExp;
@@ -59,10 +63,33 @@ function fixPositions(token: IToken, start: number) {
   token.children && token.children.forEach(c => fixPositions(c, token.start));
 }
 
+
+export function parseRuleName(name: string) {
+  let postDecoration = decorationRE.exec(name);
+  let preDecoration = preDecorationRE.exec(name);
+
+  return {
+    raw: name,
+    name: name.replace(decorationRE, '').replace(preDecorationRE, ''),
+    isOptional: postDecoration && (postDecoration[0] == '?' || postDecoration[0] == '*') || false,
+    allowRepetition: postDecoration && (postDecoration[0] == '+' || postDecoration[0] == '*') || false,
+    atLeastOne: postDecoration && (postDecoration[1] == '+') || !postDecoration,
+    lookupPositive: preDecoration && preDecoration[0] == '&',
+    lookupNegative: preDecoration && preDecoration[0] == '!'
+  };
+}
+
+
+export function findRuleByName(name: string, parser: Parser): IRule {
+  let parsed = parseRuleName(name);
+
+  return parser.cachedRules[parsed.name] || null;
+}
+
 /// Removes all the nodes starting with 'RULE_'
-function stripRules(token: IToken) {
+function stripRules(token: IToken, re: RegExp) {
   if (token.children) {
-    let localRules = token.children.filter(x => x.type && (x.type.indexOf('RULE_') == 0 || x.type.indexOf('%') == 0));
+    let localRules = token.children.filter(x => x.type && re.test(x.type));
     for (let i = 0; i < localRules.length; i++) {
       let indexOnChildren = token.children.indexOf(localRules[i]);
       if (indexOnChildren != -1) {
@@ -70,47 +97,62 @@ function stripRules(token: IToken) {
       }
     }
 
-    token.children.forEach(c => stripRules(c));
+    token.children.forEach(c => stripRules(c, re));
   }
+}
+
+export interface IDictionary<T> {
+  [s: string]: T;
 }
 export class Parser {
   debug = false;
 
+  cachedRules: IDictionary<IRule> = {};
   constructor(public grammarRules: IRule[], public options) {
     let errors = [];
 
     grammarRules.forEach(rule => {
+      let parsedName = parseRuleName(rule.name);
+
+      if (parsedName.name in this.cachedRules) {
+        errors.push('Duplicated rule ' + name);
+        return;
+      } else {
+        this.cachedRules[parsedName.name] = rule;
+      }
+
       rule.bnf.forEach(options => {
-        if (typeof options[0] == 'string' && (
-          options[0] == rule.name
-          || options[0] == rule.name + '+'
-          || options[0] == rule.name + '*'
-          || options[0] == rule.name + '?'
-        )) {
-          let error = 'Left recursion is not allowed, on rule ' + rule.name;
+        if (typeof options[0] === 'string') {
+          let parsed = parseRuleName(options[0] as string);
+          if (parsed.name == rule.name) {
+            let error = 'Left recursion is not allowed yet, rule: ' + rule.name;
 
-          if (errors.indexOf(error) == -1)
-            errors.push(error);
-
-          options[0] = '"%%%%%"';
+            if (errors.indexOf(error) == -1)
+              errors.push(error);
+          }
         }
       });
     });
 
     if (errors.length)
-      console.log(errors.join('\n'));
+      throw new Error(errors.join('\n'));
   }
 
   getAST(txt: string, target?: string) {
     if (!target) {
-      target = this.grammarRules.filter(x => x.name.indexOf('RULE_') != 0 && x.name.indexOf('%') != 0)[0].name;
+      target = this.grammarRules.filter(x => x.name.indexOf('%') != 0)[0].name;
     }
 
     let result = this.parse(txt, target);
 
     if (result) {
       fixPositions(result, 0);
-      stripRules(result);
+
+      // REMOVE ALL THE TAGS MATCHING /^%/
+      stripRules(result, /^%/);
+
+      if (!this.options || !this.options.keepUpperRules)
+        stripRules(result, UPPER_SNAKE_RE);
 
       let rest = result.rest;
 
@@ -129,22 +171,21 @@ export class Parser {
   parse(txt: string, target: string, recursion = 0): IToken {
     let out = null;
 
-    let type = target.replace(/[\*\?\+]$/, '');
-    // let isOptional = /\?$/.test(target);
-
-    let targetLex = this.findRule(type);
+    let type = parseRuleName(target);
 
     let expr: RegExp;
 
-    let printable = this.debug || this.debug && type.indexOf('"') != 0 && type.indexOf('RULE_') != 0 && type.indexOf("'") != 0;
+    let isLiteral = type.name.indexOf('"') == 0 || type.name.indexOf("'") == 0;
+
+    let printable = this.debug && !isLiteral && !UPPER_SNAKE_RE.test(type.name);
 
     printable && console.log(new Array(recursion).join('│  ') + 'Trying to get ' + target + ' from ' + JSON.stringify(txt.split('\n')[0]));
 
-    let realType = type;
+    let realType = type.name;
 
     if (txt === "") {
       return {
-        type: 'RULE_EOF',
+        type: 'EOF',
         text: '',
         rest: '',
         start: 0,
@@ -156,9 +197,11 @@ export class Parser {
       };
     }
 
+    let targetLex = findRuleByName(type.name, this);
+
     try {
-      if (!targetLex && (type.indexOf('"') == 0 || type.indexOf("'") == 0)) {
-        let src = global.eval(type);
+      if (!targetLex && isLiteral) {
+        let src = global.eval(type.name);
 
         if (src === "") {
           return {
@@ -196,7 +239,7 @@ export class Parser {
           if (out) return;
 
           let tmp: IToken = {
-            type: type,
+            type: type.name,
             text: '',
             children: [],
             end: 0,
@@ -214,29 +257,24 @@ export class Parser {
           let foundSomething = false;
 
           for (let i = 0; i < phases.length; i++) {
-            let localTarget = phases[i];
+            if (typeof phases[i] == "string") {
 
-            if ('"0"' == localTarget && tmpTxt == '1.01e+124') debugger;
+              let localTarget = parseRuleName(phases[i] as string);
 
-            if (typeof localTarget == "string") {
-              let isOptional = /(\*|\?)$/.test(localTarget);
-              let allowRepetition = /(\*|\+)$/.test(localTarget);
-              let atLeastOne = /\+$/.test(localTarget);
-
-              allOptional = allOptional && isOptional;
+              allOptional = allOptional && localTarget.isOptional;
 
               let got: IToken;
 
               let foundAtLeastOne = false;
 
               do {
-                got = this.parse(tmpTxt, localTarget, recursion + 1);
+                got = this.parse(tmpTxt, localTarget.name, recursion + 1);
 
-                if (!got && isOptional)
+                if (!got && localTarget.isOptional)
                   break;
 
                 if (!got) {
-                  if (foundAtLeastOne && atLeastOne ? tmp : null)
+                  if (foundAtLeastOne && localTarget.atLeastOne ? tmp : null)
                     break;
                   return;
                 }
@@ -264,6 +302,7 @@ export class Parser {
                     tmp.children.push(got);
                   }
                 }
+
                 printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.text);
 
                 tmp.text = tmp.text + got.text;
@@ -273,21 +312,15 @@ export class Parser {
                 position += got.text.length;
 
                 tmp.rest = tmpTxt;
-              } while (got && allowRepetition && tmpTxt.length);
+              } while (got && localTarget.allowRepetition && tmpTxt.length);
             } else {
-              // let isOptional = /(\*|\?)$/.test(localTarget.source);
-              // let allowRepetition = /(\*|\+)$/.test(localTarget.source);
-              // let atLeastOne = /\+$/.test(localTarget.source);
-              let got = readToken(tmpTxt, localTarget);
-
-              // if (!got && isOptional)
-              //  break;
+              let got = readToken(tmpTxt, phases[i] as RegExp);
 
               if (!got) {
                 return;
               }
 
-              // printable && console.log(new Array(recursion + 1).join('│  ') + '└> ' + got.text);
+              printable && console.log(new Array(recursion + 1).join('│  ') + '└> ' + got.text);
 
               foundSomething = true;
 
@@ -313,10 +346,6 @@ export class Parser {
     }
 
     return out;
-  }
-
-  findRule(name: string) {
-    return this.grammarRules.filter(x => x.name == name)[0] as IRule || null;
   }
 }
 

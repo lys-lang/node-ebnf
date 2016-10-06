@@ -7,23 +7,23 @@ let inspect = require('util').inspect;
 
 
 let grammar = `
-Grammar ::= RULE_S* (Production RULE_S*)*
-Production ::= NCName RULE_S* "::=" RULE_Whitespace* (SequenceOrDifference (RULE_Whitespace* "|" RULE_Whitespace* SequenceOrDifference)* ) RULE_Whitespace* RULE_EOL+ RULE_S*
+Grammar ::= S* (Production S*)*
+Production ::= NCName S* "::=" WS* (SequenceOrDifference (WS* "|" WS* SequenceOrDifference)* ) WS* EOL+ S*
 NCName ::= [a-zA-Z][a-zA-Z_0-9]*
-SequenceOrDifference ::= (RULE_Whitespace* (NCName | StringLiteral | CharCode | CharClass | SubItem) PrimaryDecoration?) RULE_Whitespace* (Minus (RULE_Whitespace* (NCName | StringLiteral | CharCode | CharClass | SubItem) PrimaryDecoration?) | (RULE_Whitespace* (NCName | StringLiteral | CharCode | CharClass | SubItem) PrimaryDecoration?)* )?
+SequenceOrDifference ::= (WS* (NCName | StringLiteral | CharCode | CharClass | SubItem) PrimaryDecoration?) WS* (Minus (WS* (NCName | StringLiteral | CharCode | CharClass | SubItem) PrimaryDecoration?) | (WS* (NCName | StringLiteral | CharCode | CharClass | SubItem) PrimaryDecoration?)* )?
 Minus ::= "-"
 PrimaryDecoration ::= "?" | "*" | "+"
-SubItem ::= "(" RULE_Whitespace* (SequenceOrDifference (RULE_Whitespace* "|" RULE_Whitespace* SequenceOrDifference)* ) RULE_Whitespace* ")"
+SubItem ::= "(" WS* (SequenceOrDifference (WS* "|" WS* SequenceOrDifference)* ) WS* ")"
 StringLiteral ::= '"' [^"]* '"' | "'" [^']* "'"
 CharCode ::= "#x" [0-9a-zA-Z]+
-CharClass ::= '[' '^'? (CharCodeRange | CharRange | CharCode | RULE_Char)+  "]"
-RULE_Char ::= #x09 | #x0A | #x0D | [#x20-#x5c] | [#x5e-#xD7FF] | [#xE000-#xFFFD]
-CharRange ::= RULE_Char "-" RULE_Char
+CharClass ::= '[' '^'? (CharCodeRange | CharRange | CharCode | CHAR)+  "]"
+CHAR ::= #x09 | #x0A | #x0D | [#x20-#x5c] | [#x5e-#xD7FF] | [#xE000-#xFFFD]
+CharRange ::= CHAR "-" CHAR
 CharCodeRange ::= CharCode "-" CharCode /* comentarios */
-RULE_Whitespace ::= (#x09 | #x20)*  | Comment RULE_Whitespace*
-RULE_S ::= RULE_Whitespace RULE_S* | RULE_EOL RULE_S*
+WS ::= (#x09 | #x20)*  | Comment WS*
+S ::= WS S* | EOL S*
 Comment ::= "/*" ([^*] | "*"+ [^\/]*)*  "*/"
-RULE_EOL ::= #x0D #x0A | #x0A | #x0D
+EOL ::= #x0D #x0A | #x0A | #x0D
   `;
 
 

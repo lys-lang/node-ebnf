@@ -8,35 +8,35 @@ let inspect = require('util').inspect;
 
 let grammar = `
 /* https://www.ietf.org/rfc/rfc4627.txt */
-value           ::= false | null | true | object | array | number | string
-RULE_beginArray      ::= RULE_ws* #x5B RULE_ws*  /* [ left square bracket */
-RULE_beginObject     ::= RULE_ws* #x7B RULE_ws*  /* { left curly bracket */
-RULE_endArray        ::= RULE_ws* #x5D RULE_ws*  /* ] right square bracket */
-RULE_endObject       ::= RULE_ws* #x7D RULE_ws*  /* } right curly bracket */
-RULE_nameSeparator   ::= RULE_ws* #x3A RULE_ws*  /* : colon */
-RULE_valueSeparator  ::= RULE_ws* #x2C RULE_ws*  /* , comma */
-RULE_ws         ::= [#x20#x09#x0A#x0D]+   /* Space | Tab | \n | \r */
-false           ::= "false"
-null            ::= "null"
-true            ::= "true"
-object          ::= RULE_beginObject (member (RULE_valueSeparator member)*)? RULE_endObject
-member          ::= string RULE_nameSeparator value
-array           ::= RULE_beginArray (value (RULE_valueSeparator value)*)? RULE_endArray
+value                ::= false | null | true | object | array | number | string
+BEGIN_ARRAY          ::= WS* #x5B WS*  /* [ left square bracket */
+BEGIN_OBJECT         ::= WS* #x7B WS*  /* { left curly bracket */
+END_ARRAY            ::= WS* #x5D WS*  /* ] right square bracket */
+END_OBJECT           ::= WS* #x7D WS*  /* } right curly bracket */
+NAME_SEPARATOR       ::= WS* #x3A WS*  /* : colon */
+VALUE_SEPARATOR      ::= WS* #x2C WS*  /* , comma */
+WS                   ::= [#x20#x09#x0A#x0D]+   /* Space | Tab | \n | \r */
+false                ::= "false"
+null                 ::= "null"
+true                 ::= "true"
+object               ::= BEGIN_OBJECT (member (VALUE_SEPARATOR member)*)? END_OBJECT
+member               ::= string NAME_SEPARATOR value
+array                ::= BEGIN_ARRAY (value (VALUE_SEPARATOR value)*)? END_ARRAY
 
 /* NUMBERS */
 
-number          ::= "-"? ("0" | [1-9] RULE_digit*) ("." [0-9]+)? exp?
-RULE_digit      ::= [0-9]
-exp             ::= ("e" | "E") ( "-" | "+" )? ("0" | [1-9] [0-9]*)
+number          ::= "-"? ("0" | [1-9] DIGIT*) ("." [0-9]+)? EXP?
+DIGIT           ::= [0-9]
+EXP             ::= ("e" | "E") ( "-" | "+" )? ("0" | [1-9] [0-9]*)
 
 /* STRINGS */
 
-string          ::= '"' RULE_char* '"'
-escape          ::= #x5C /* \ */
+string          ::= '"' CHAR* '"'
+ESCAPE          ::= #x5C /* \ */
 HEXDIG          ::= [a-fA-F0-9]
-escapable       ::= #x22 | #x5C | #x2F | #x62 | #x66 | #x6E | #x72 | #x74 | #x75 HEXDIG HEXDIG HEXDIG HEXDIG
-RULE_char       ::= unescaped | escape escapable
-unescaped       ::= [#x20-#x21] | [#x23-#x5B] | [#x5D-#xFFFF]
+ESCAPABLE       ::= #x22 | #x5C | #x2F | #x62 | #x66 | #x6E | #x72 | #x74 | #x75 HEXDIG HEXDIG HEXDIG HEXDIG
+CHAR            ::= UNESCAPED | ESCAPE ESCAPABLE
+UNESCAPED       ::= [#x20-#x21] | [#x23-#x5B] | [#x5D-#xFFFF]
   `;
 
 describe('JSON', () => {

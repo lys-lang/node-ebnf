@@ -14,13 +14,14 @@
 // RULE_Char	::=	[http://www.w3.org/TR/xml#NT-RULE_Char]
 // CharRange	::=	RULE_Char '-' ( RULE_Char - ']' )
 // CharCodeRange	::=	CharCode '-' CharCode
-// RULE_Whitespace	::=	RULE_S | Comment
+// RULE_WHITESPACE	::=	RULE_S | Comment
 // RULE_S	::=	#x9 | #xA | #xD | #x20
 // Comment	::=	'/*' ( [^*] | '*'+ [^*/] )* '*'* '*/'
 
 import { findChildrenByType } from '../SemanticHelpers';
 
 import { IRule, Parser as _Parser, IToken } from '..';
+import { findRuleByName } from '../Parser';
 
 namespace BNF {
   export const RULES: IRule[] = [
@@ -34,7 +35,7 @@ namespace BNF {
       bnf: [['Production', 'RULE_S*']]
     }, {
       name: 'Production',
-      bnf: [['NCName', 'RULE_S*', '"::="', 'RULE_Whitespace*', '%Choice', 'RULE_Whitespace*', 'RULE_EOL+', 'RULE_S*']]
+      bnf: [['NCName', 'RULE_S*', '"::="', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', 'RULE_EOL+', 'RULE_S*']]
     }, {
       name: 'NCName',
       bnf: [[/[a-zA-Z][a-zA-Z_0-9]*/]]
@@ -43,10 +44,10 @@ namespace BNF {
       bnf: [['SequenceOrDifference', '%_Choice_1*']]
     }, {
       name: '%_Choice_1',
-      bnf: [['RULE_Whitespace*', '"|"', 'RULE_Whitespace*', 'SequenceOrDifference']]
+      bnf: [['RULE_WHITESPACE*', '"|"', 'RULE_WHITESPACE*', 'SequenceOrDifference']]
     }, {
       name: 'SequenceOrDifference',
-      bnf: [['%Item', 'RULE_Whitespace*', '%_Item_1?']]
+      bnf: [['%Item', 'RULE_WHITESPACE*', '%_Item_1?']]
     }, {
       name: '%_Item_1',
       bnf: [['Minus', '%Item'], ['%Item*']]
@@ -55,7 +56,7 @@ namespace BNF {
       bnf: [['"-"']]
     }, {
       name: '%Item',
-      bnf: [['RULE_Whitespace*', '%Primary', 'PrimaryDecoration?']]
+      bnf: [['RULE_WHITESPACE*', '%Primary', 'PrimaryDecoration?']]
     }, {
       name: 'PrimaryDecoration',
       bnf: [['"?"'], ['"*"'], ['"+"']]
@@ -70,7 +71,7 @@ namespace BNF {
       ]
     }, {
       name: 'SubItem',
-      bnf: [['"("', 'RULE_Whitespace*', '%Choice', 'RULE_Whitespace*', '")"']]
+      bnf: [['"("', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', '")"']]
     }, {
       name: 'StringLiteral',
       bnf: [[`'"'`, /[^"]*/, `'"'`], [`"'"`, /[^']*/, `"'"`]]
@@ -95,13 +96,13 @@ namespace BNF {
       name: 'CharCodeRange',
       bnf: [['CharCode', '"-"', 'CharCode']]
     }, {
-      name: 'RULE_Whitespace',
-      bnf: [['%RULE_Whitespace_Char*'], ['Comment', 'RULE_Whitespace*']]
+      name: 'RULE_WHITESPACE',
+      bnf: [['%RULE_WHITESPACE_CHAR*'], ['Comment', 'RULE_WHITESPACE*']]
     }, {
       name: 'RULE_S',
-      bnf: [['RULE_Whitespace', 'RULE_S*'], ['RULE_EOL', 'RULE_S*']]
+      bnf: [['RULE_WHITESPACE', 'RULE_S*'], ['RULE_EOL', 'RULE_S*']]
     }, {
-      name: '%RULE_Whitespace_Char',
+      name: '%RULE_WHITESPACE_CHAR',
       bnf: [[/\x09/], [/\x20/]]
     }, {
       name: 'Comment',
@@ -116,6 +117,65 @@ namespace BNF {
   ];
 
   export const parser = new _Parser(RULES, {});
+
+
+  const decorationRE = /(\?|\+|\*)$/;
+  const subExpressionRE = /^%/;
+
+  function getBNFRule(name: string | RegExp, parser: Parser): string {
+    if (typeof name == 'string') {
+      let decoration = decorationRE.exec(name);
+
+      let decorationText = decoration ? decoration[0] + ' ' : '';
+
+      let subexpression = subExpressionRE.test(name);
+
+      if (subexpression) {
+        let lonely = isLonelyRule(name, parser);
+
+        if (lonely)
+          return getBNFBody(name, parser) + decorationText;
+
+        return '(' + getBNFBody(name, parser) + ')' + decorationText;
+      }
+
+      return name;
+    } else {
+      return name.source
+        .replace(/\\(?:x|u)([a-zA-Z0-9]+)/g, '#x$1')
+        .replace(/\[\\(?:x|u)([a-zA-Z0-9]+)-\\(?:x|u)([a-zA-Z0-9]+)\]/g, '[#x$1-#x$2]');
+    }
+  }
+
+  /// Returns true if the rule is a string literal or regular expression without a descendant tree
+  function isLonelyRule(name: string, parser: Parser) {
+    let rule = findRuleByName(name, parser);
+    return rule && rule.bnf.length == 1 && rule.bnf[0].length == 1 && (rule.bnf[0][0] instanceof RegExp || rule.bnf[0][0][0] == '"' || rule.bnf[0][0][0] == "'");
+  }
+
+  function getBNFChoice(rules, parser: Parser) {
+    return rules.map(x => getBNFRule(x, parser)).join(' ');
+  }
+
+  function getBNFBody(name: string, parser: Parser): string {
+    let rule = findRuleByName(name, parser);
+
+    if (rule)
+      return rule.bnf.map(x => getBNFChoice(x, parser)).join(' | ');
+
+    return 'RULE_NOT_FOUND {' + name + '}';
+  }
+  export function emit(parser: Parser): string {
+    let acumulator: string[] = [];
+
+    parser.grammarRules.forEach(l => {
+      if (!(/^%/.test(l.name))) {
+        acumulator.push(l.name + ' ::= ' + getBNFBody(l.name, parser));
+      }
+    });
+
+    return acumulator.join('\n');
+  }
 
   function getAllTerms(expr: IToken): string[] {
     let terms = findChildrenByType(expr, 'term').map(term => {
@@ -133,11 +193,12 @@ namespace BNF {
 
   function restar(total, resta) {
     console.log('reberia restar ' + resta + ' a ' + total);
+    throw new Error('Difference not supported yet');
   }
 
   function convertRegex(txt: string): RegExp {
     return new RegExp(txt
-      .replace(/#x([a-zA-Z0-9]{4})/g, '\\u$1')
+      .replace(/#x([a-zA-Z0-9]{4,8})/g, '\\u$1')
       .replace(/#x([a-zA-Z0-9]{3})/g, '\\u0$1')
       .replace(/#x([a-zA-Z0-9]{2})/g, '\\x$1')
       .replace(/#x([a-zA-Z0-9]{1})/g, '\\x0$1')
@@ -188,7 +249,7 @@ namespace BNF {
         case 'PrimaryDecoration':
           break;
         default:
-          console.log(' HOW SHOULD I PARSE THIS? ', x);
+          throw new Error(' HOW SHOULD I PARSE THIS? ' + x.type + ' -> ' + JSON.stringify(x.text));
       }
 
       anterior = x;
@@ -198,8 +259,6 @@ namespace BNF {
   }
 
   function createRule(tmpRules: any[], token: IToken, name: string) {
-    console.log(name);
-
     let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
 
     let rule = {
