@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha --reporter spec",
     "test-travis": "npm run lint && npm run build && npm run coverage && npm run test",
-    "preversion": "npm test",
+    "preversion": "npm run build && npm test",
     "coverage": "(`npm bin`/istanbul cover `npm bin`/_mocha || true)",
     "lint": "tslint -t msbuild src/**/*.ts",
     "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-test.json"
