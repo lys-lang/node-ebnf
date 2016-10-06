@@ -14,7 +14,7 @@ describe('Lookahead Negative', function () {
     TestHelpers_1.testParseToken(parser, 'false a');
     TestHelpers_1.testParseToken(parser, 'trueAAA a');
     TestHelpers_1.testParseToken(parser, 'falseaAAA a');
-    TestHelpers_1.testParseToken(parser, 'falseaAAA a1');
+    TestHelpers_1.testParseToken(parser, 'falseaAAA a');
 });
 describe('Lookahead Positive', function () {
     var parser = new dist_1.Grammars.W3C.Parser("\n    Document ::= ((FunctionName | Identifier | Parenthesis) \" \"*)+\n    Identifier ::= [a-zA-Z_]+\n    FunctionName ::= Identifier &\"(\"\n    Parenthesis ::= \"(\" (!\")\" [.])* \")\"\n  ", {});
