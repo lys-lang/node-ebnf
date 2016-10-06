@@ -68,15 +68,20 @@ export function parseRuleName(name: string) {
   let postDecoration = decorationRE.exec(name);
   let preDecoration = preDecorationRE.exec(name);
 
-  return {
+  let out = {
     raw: name,
     name: name.replace(decorationRE, '').replace(preDecorationRE, ''),
     isOptional: postDecoration && (postDecoration[0] == '?' || postDecoration[0] == '*') || false,
     allowRepetition: postDecoration && (postDecoration[0] == '+' || postDecoration[0] == '*') || false,
     atLeastOne: postDecoration && (postDecoration[1] == '+') || !postDecoration,
-    lookupPositive: preDecoration && preDecoration[0] == '&',
-    lookupNegative: preDecoration && preDecoration[0] == '!'
+    lookupPositive: preDecoration && preDecoration[0] == '&' || false,
+    lookupNegative: preDecoration && preDecoration[0] == '!' || false,
+    lookup: false
   };
+
+  out.lookup = out.lookupNegative || out.lookupPositive;
+
+  return out;
 }
 
 
@@ -157,7 +162,7 @@ export class Parser {
       let rest = result.rest;
 
       if (rest) {
-        new TokenError('Unexpected end of input: ' + rest, result);
+        new TokenError('Unexpected end of input: ' + JSON.stringify(rest) + txt, result);
       }
 
       fixRest(result);
@@ -177,7 +182,7 @@ export class Parser {
 
     let isLiteral = type.name.indexOf('"') == 0 || type.name.indexOf("'") == 0;
 
-    let printable = this.debug && !isLiteral && !UPPER_SNAKE_RE.test(type.name);
+    let printable = this.debug && /*!isLiteral &*/ !UPPER_SNAKE_RE.test(type.name);
 
     printable && console.log(new Array(recursion).join('│  ') + 'Trying to get ' + target + ' from ' + JSON.stringify(txt.split('\n')[0]));
 
@@ -270,6 +275,22 @@ export class Parser {
               do {
                 got = this.parse(tmpTxt, localTarget.name, recursion + 1);
 
+                // rule ::= "true" ![a-zA-Z]
+                // negative lookup, if it does not matches, we should continue
+                if (localTarget.lookupNegative) {
+                  if (got)
+                    return;
+                  break;
+                }
+
+                if (localTarget.lookupPositive) {
+                  if (!got || got.type == 'EOF')
+                    return;
+                }
+
+                if (got && got.type == 'EOF')
+                  continue;
+
                 if (!got && localTarget.isOptional)
                   break;
 
@@ -289,7 +310,7 @@ export class Parser {
                 got.start += position;
                 got.end += position;
 
-                if (got.type) {
+                if (!localTarget.lookupPositive && got.type) {
                   if (got.type.indexOf('%') == 0) {
                     got.children && got.children.forEach(x => {
                       x.start += position;
@@ -303,24 +324,27 @@ export class Parser {
                   }
                 }
 
-                printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.text);
+                printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.type + ' ' + JSON.stringify(got.text));
 
-                tmp.text = tmp.text + got.text;
-                tmp.end = tmp.text.length;
+                // EAT it from the input stream, only if it is not a lookup
+                if (!localTarget.lookupPositive) {
+                  tmp.text = tmp.text + got.text;
+                  tmp.end = tmp.text.length;
 
-                tmpTxt = tmpTxt.substr(got.text.length);
-                position += got.text.length;
+                  tmpTxt = tmpTxt.substr(got.text.length);
+                  position += got.text.length;
+                }
 
                 tmp.rest = tmpTxt;
               } while (got && localTarget.allowRepetition && tmpTxt.length);
-            } else {
+            } else /* IS A REGEXP */ {
               let got = readToken(tmpTxt, phases[i] as RegExp);
 
               if (!got) {
                 return;
               }
 
-              printable && console.log(new Array(recursion + 1).join('│  ') + '└> ' + got.text);
+              printable && console.log(new Array(recursion + 1).join('│  ') + '└> ' + JSON.stringify(got.text) + (phases[i] as RegExp).source);
 
               foundSomething = true;
 

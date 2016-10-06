@@ -2,12 +2,13 @@ import { IToken, Parser, Grammars } from '../dist';
 
 declare var require, it;
 
-export const printBNF = Grammars.W3C.emit;
+export const printBNF = (parser: Parser) => console.log(Grammars.W3C.emit(parser));
 
 let inspect = require('util').inspect;
 
 export function testParseToken(parser: Parser, txt: string, target?: string) {
   it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), () => {
+    console.log('      ---------------------------------------------------');
     let result = parser.getAST(txt, target);
     parser.debug && console.log(txt + '\n' + inspect(result, false, 20, true));
     try {
@@ -35,7 +36,8 @@ export function testParseToken(parser: Parser, txt: string, target?: string) {
 function printDescription(token: IToken, maxLength: number) {
   if (/\n/.test(token.text)) return;
   console.log(
-    new Array(token.start + 1).join(' ')
+    '         '
+    + new Array(token.start + 1).join(' ')
     + token.text // new Array(token.text.length + 1).join('^')
     + new Array(maxLength - token.end + 2).join(' ')
     + token.type

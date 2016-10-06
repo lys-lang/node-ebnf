@@ -28,7 +28,7 @@ namespace BNF {
     {
       name: 'Grammar',
       bnf: [
-        ['RULE_S*', '%Atomic*']
+        ['RULE_S*', '%Atomic*', 'EOF']
       ]
     }, {
       name: '%Atomic',
@@ -56,10 +56,13 @@ namespace BNF {
       bnf: [['"-"']]
     }, {
       name: '%Item',
-      bnf: [['RULE_WHITESPACE*', '%Primary', 'PrimaryDecoration?']]
+      bnf: [['RULE_WHITESPACE*', 'PrimaryPreDecoration?', '%Primary', 'PrimaryDecoration?']]
     }, {
       name: 'PrimaryDecoration',
       bnf: [['"?"'], ['"*"'], ['"+"']]
+    }, {
+      name: 'PrimaryPreDecoration',
+      bnf: [['"!"'], ['"&"']]
     }, {
       name: '%Primary',
       bnf: [
@@ -119,13 +122,16 @@ namespace BNF {
   export const parser = new _Parser(RULES, {});
 
 
+  const preDecorationRE = /^(!|&)/;
   const decorationRE = /(\?|\+|\*)$/;
   const subExpressionRE = /^%/;
 
   function getBNFRule(name: string | RegExp, parser: Parser): string {
     if (typeof name == 'string') {
       let decoration = decorationRE.exec(name);
+      let preDecoration = preDecorationRE.exec(name);
 
+      let preDecorationText = preDecoration ? '/* ' + preDecoration[0] + ' */' : '';
       let decorationText = decoration ? decoration[0] + ' ' : '';
 
       let subexpression = subExpressionRE.test(name);
@@ -134,9 +140,9 @@ namespace BNF {
         let lonely = isLonelyRule(name, parser);
 
         if (lonely)
-          return getBNFBody(name, parser) + decorationText;
+          return preDecorationText + getBNFBody(name, parser) + decorationText;
 
-        return '(' + getBNFBody(name, parser) + ')' + decorationText;
+        return preDecorationText + '(' + getBNFBody(name, parser) + ')' + decorationText;
       }
 
       return name;
@@ -219,21 +225,27 @@ namespace BNF {
       let decoration: any = seq.children[i + 1];
       decoration = decoration && decoration.type == 'PrimaryDecoration' && decoration.text || '';
 
+      let preDecoration = '';
+
+      if (anterior && anterior.type == 'PrimaryPreDecoration') {
+        preDecoration = anterior.text;
+      }
+
       switch (x.type) {
         case 'SubItem':
           let name = '%' + (parentName + (subitems++));
 
           createRule(tmpRules, x, name);
 
-          bnfSeq.push(name + decoration);
+          bnfSeq.push(preDecoration + name + decoration);
           break;
         case 'NCName':
         case 'StringLiteral':
-          bnfSeq.push(x.text + decoration);
+          bnfSeq.push(preDecoration + x.text + decoration);
           break;
         case 'CharCode':
         case 'CharClass':
-          if (decoration) {
+          if (decoration || preDecoration) {
             let newRule = {
               name: '%' + (parentName + (subitems++)),
               bnf: [[convertRegex(x.text)]]
@@ -241,11 +253,13 @@ namespace BNF {
 
             tmpRules.push(newRule);
 
-            bnfSeq.push(newRule.name + decoration);
+            bnfSeq.push(preDecoration + newRule.name + decoration);
           } else {
             bnfSeq.push(convertRegex(x.text));
           }
           break;
+
+        case 'PrimaryPreDecoration':
         case 'PrimaryDecoration':
           break;
         default:

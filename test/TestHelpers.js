@@ -1,9 +1,10 @@
 "use strict";
 var dist_1 = require('../dist');
-exports.printBNF = dist_1.Grammars.W3C.emit;
+exports.printBNF = function (parser) { return console.log(dist_1.Grammars.W3C.emit(parser)); };
 var inspect = require('util').inspect;
 function testParseToken(parser, txt, target) {
     it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), function () {
+        console.log('      ---------------------------------------------------');
         var result = parser.getAST(txt, target);
         parser.debug && console.log(txt + '\n' + inspect(result, false, 20, true));
         try {
@@ -27,7 +28,8 @@ exports.testParseToken = testParseToken;
 function printDescription(token, maxLength) {
     if (/\n/.test(token.text))
         return;
-    console.log(new Array(token.start + 1).join(' ')
+    console.log('         '
+        + new Array(token.start + 1).join(' ')
         + token.text // new Array(token.text.length + 1).join('^')
         + new Array(maxLength - token.end + 2).join(' ')
         + token.type);

@@ -8,7 +8,7 @@
       "program": "${workspaceRoot}/node_modules/.bin/_mocha",
       "stopOnEntry": false,
       "args": [
-        "test/BNF.spec.js",
+        "test/Lookahead.spec.js",
         "--ui",
         "bdd",
         "--reporter",

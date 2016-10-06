@@ -118,7 +118,6 @@ namespace BNF {
 
 
   export function getRules(source: string): IRule[] {
-debugger
     let ast =  parser.getAST(source);
 
     if (!ast) throw new Error('Could not parse ' + source);

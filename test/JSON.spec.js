@@ -13,7 +13,6 @@ describe('JSON', function () {
     });
     describe('Grammars.W3C parses JSON grammar', function () {
         var RULES = dist_1.Grammars.W3C.getRules(grammar);
-        console.log('JSON:\n' + inspect(RULES, false, 20, true));
         var parser = new dist_1.Parser(RULES, {});
         TestHelpers_1.printBNF(parser);
         TestHelpers_1.testParseToken(parser, JSON.stringify(true));
