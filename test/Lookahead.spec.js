@@ -6,7 +6,6 @@ var expect = require('expect');
 describe('Lookahead Negative', function () {
     var parser = new dist_1.Grammars.W3C.Parser("\n    Document ::= ((Boolean | IdentifieR) \" \"*)+\n    IdentifieR ::= [a-zA-Z]+\n    Boolean ::= (\"true\" | \"false\") [ebnf://not]IdentifieR\n  ", {});
     TestHelpers_1.printBNF(parser);
-    parser.debug = true;
     TestHelpers_1.testParseToken(parser, 'keyword', null, function (doc) {
         expect(doc.children[0].type).toEqual('IdentifieR');
     });

@@ -47,7 +47,7 @@ namespace BNF {
       bnf: [['RULE_WHITESPACE*', '"|"', 'RULE_WHITESPACE*', 'SequenceOrDifference']]
     }, {
       name: 'SequenceOrDifference',
-      bnf: [['%Item', 'RULE_WHITESPACE*', '%_Item_1?']]
+      bnf: [['RecoverRule?', '%Item', 'RULE_WHITESPACE*', '%_Item_1?']]
     }, {
       name: '%_Item_1',
       bnf: [['Minus', '%Item'], ['%Item*']]
@@ -63,6 +63,9 @@ namespace BNF {
     }, {
       name: 'PrimaryPreDecoration',
       bnf: [['&"[ebnf://"', "'['", 'DecorationName', '%Url1?', '"]"']]
+    }, {
+      name: 'RecoverRule',
+      bnf: [['RULE_WHITESPACE*', '"[recover://"', 'NCName', '"]"']]
     }, {
       name: 'DecorationName',
       bnf: [['"ebnf://"', /[^\x5D#]+/]]
@@ -184,8 +187,10 @@ namespace BNF {
   function getBNFBody(name: string, parser: Parser): string {
     let rule = findRuleByName(name, parser);
 
+    let recover = rule.recover ? '[~' + rule.recover + '] ' : '';
+
     if (rule)
-      return rule.bnf.map(x => getBNFChoice(x, parser)).join(' | ');
+      return recover + rule.bnf.map(x => getBNFChoice(x, parser)).join(' | ');
 
     return 'RULE_NOT_FOUND {' + name + '}';
   }
@@ -261,6 +266,10 @@ namespace BNF {
         case 'StringLiteral':
           bnfSeq.push(preDecoration + x.text + decoration);
           break;
+
+        case 'RecoverRule':
+          bnfSeq["recover"] = findChildrenByType(x, 'NCName')[0].text;
+          break;
         case 'CharCode':
         case 'CharClass':
           if (decoration || preDecoration) {
@@ -293,10 +302,19 @@ namespace BNF {
   function createRule(tmpRules: any[], token: IToken, name: string) {
     let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
 
-    let rule = {
+    let rule: IRule = {
       name,
       bnf
     };
+
+    let recover: string = null;
+
+    bnf.forEach(x => {
+      recover = recover || x["recover"];
+      delete x["recover"];
+    });
+
+    if (recover) rule.recover = recover;
 
     tmpRules.push(rule);
   }

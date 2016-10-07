@@ -4,7 +4,7 @@ declare var global;
 
 const UPPER_SNAKE_RE = /^[A-Z0-9_]+$/;
 const decorationRE = /(\?|\+|\*)$/;
-const preDecorationRE = /^(&|!)/;
+const preDecorationRE = /^(@|&|!)/;
 
 import { TokenError } from './TokenError';
 
@@ -13,6 +13,7 @@ export type RulePrimary = string | RegExp;
 export interface IRule {
   name: string;
   bnf: RulePrimary[][];
+  recover?: string;
 }
 
 export interface IToken {
@@ -68,14 +69,18 @@ export function parseRuleName(name: string) {
   let postDecoration = decorationRE.exec(name);
   let preDecoration = preDecorationRE.exec(name);
 
+  let postDecorationText = postDecoration && postDecoration[0] || '';
+  let preDecorationText = preDecoration && preDecoration[0] || '';
+
   let out = {
     raw: name,
     name: name.replace(decorationRE, '').replace(preDecorationRE, ''),
-    isOptional: postDecoration && (postDecoration[0] == '?' || postDecoration[0] == '*') || false,
-    allowRepetition: postDecoration && (postDecoration[0] == '+' || postDecoration[0] == '*') || false,
-    atLeastOne: postDecoration && (postDecoration[1] == '+') || !postDecoration,
-    lookupPositive: preDecoration && preDecoration[0] == '&' || false,
-    lookupNegative: preDecoration && preDecoration[0] == '!' || false,
+    isOptional: postDecorationText == '?' || postDecorationText == '*',
+    allowRepetition: postDecorationText == '+' || postDecorationText == '*',
+    atLeastOne: postDecorationText == '+',
+    lookupPositive: preDecorationText == '&',
+    lookupNegative: preDecorationText == '!',
+    pinned: preDecorationText == '@',
     lookup: false
   };
 
@@ -130,7 +135,7 @@ export class Parser {
         if (typeof options[0] === 'string') {
           let parsed = parseRuleName(options[0] as string);
           if (parsed.name == rule.name) {
-            let error = 'Left recursion is not allowed yet, rule: ' + rule.name;
+            let error = 'Left recursion is not allowed, rule: ' + rule.name;
 
             if (errors.indexOf(error) == -1)
               errors.push(error);
@@ -331,7 +336,7 @@ export class Parser {
 
                 printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.type + ' ' + JSON.stringify(got.text));
 
-                // EAT it from the input stream, only if it is not a lookup
+                // Eat it from the input stream, only if it is not a lookup
                 if (!localTarget.lookupPositive) {
                   tmp.text = tmp.text + got.text;
                   tmp.end = tmp.text.length;
