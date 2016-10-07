@@ -64,7 +64,12 @@ function fixPositions(token: IToken, start: number) {
   token.children && token.children.forEach(c => fixPositions(c, token.start));
 }
 
+function agregateErrors(errors: any[], token: IToken) {
+  if (token.errors && token.errors.length)
+    token.errors.forEach(err => errors.push(err));
 
+  token.children && token.children.forEach(tok => agregateErrors(errors, tok));
+}
 export function parseRuleName(name: string) {
   let postDecoration = decorationRE.exec(name);
   let preDecoration = preDecorationRE.exec(name);
@@ -156,6 +161,8 @@ export class Parser {
     let result = this.parse(txt, target);
 
     if (result) {
+
+      agregateErrors(result.errors, result);
       fixPositions(result, 0);
 
       // REMOVE ALL THE TAGS MATCHING /^%/
@@ -307,8 +314,13 @@ export class Parser {
                 if (!got) {
                   if (foundAtLeastOne && localTarget.atLeastOne ? tmp : null)
                     break;
-                  return;
                 }
+
+                if (!got)
+                  got = this.parseRecovery(targetLex, tmpTxt, recursion + 1);
+
+                if (!got)
+                  return;
 
                 foundAtLeastOne = true;
                 foundSomething = true;
@@ -380,6 +392,47 @@ export class Parser {
     }
 
     return out;
+  }
+
+  private parseRecovery(recoverableToken: IRule, tmpTxt: string, recursion: number): IToken {
+    if (recoverableToken.recover && tmpTxt.length) {
+      let printable = this.debug;
+
+      printable && console.log(new Array(recursion).join('│  ') + 'Trying to recover until token ' + recoverableToken.recover + ' from ' + JSON.stringify(tmpTxt.split('\n')[0]));
+
+      let tmp: IToken = {
+        type: 'SyntaxError',
+        text: '',
+        children: [],
+        end: 0,
+        errors: [],
+        fullText: '',
+        parent: null,
+        start: 0,
+        rest: ''
+      };
+
+      let got: IToken;
+
+      do {
+        got = this.parse(tmpTxt, recoverableToken.recover, recursion);
+
+        if (got) {
+          new TokenError('Unexpected input: ' + tmp.text, tmp);
+          break;
+        } else {
+          tmp.text = tmp.text + tmpTxt[0];
+          tmp.end = tmp.text.length;
+          tmpTxt = tmpTxt.substr(1);
+        }
+      } while (!got && tmpTxt.length > 0);
+
+      if (tmp.text.length > 0 && got) {
+        printable && console.log(new Array(recursion).join('│  ') + 'Recovered text: ' + JSON.stringify(tmp.text));
+        return tmp;
+      }
+    }
+    return null;
   }
 }
 

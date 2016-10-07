@@ -8,7 +8,7 @@
       "program": "${workspaceRoot}/node_modules/.bin/_mocha",
       "stopOnEntry": false,
       "args": [
-        "test/Lookahead.spec.js",
+        "test/JSONRecovery.spec.js",
         "--ui",
         "bdd",
         "--reporter",

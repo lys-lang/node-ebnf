@@ -187,7 +187,7 @@ namespace BNF {
   function getBNFBody(name: string, parser: Parser): string {
     let rule = findRuleByName(name, parser);
 
-    let recover = rule.recover ? '[~' + rule.recover + '] ' : '';
+    let recover = rule.recover ? '[recover://' + rule.recover + '] ' : '';
 
     if (rule)
       return recover + rule.bnf.map(x => getBNFChoice(x, parser)).join(' | ');

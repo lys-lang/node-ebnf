@@ -3,6 +3,16 @@ var dist_1 = require('../dist');
 exports.printBNF = function (parser) { return console.log(dist_1.Grammars.W3C.emit(parser)); };
 var inspect = require('util').inspect;
 function testParseToken(parser, txt, target, customTest) {
+    testParseTokenFailsafe(parser, txt, target, function (doc) {
+        if (doc.errors.length)
+            throw doc.errors[0];
+        if (doc.rest.length != 0)
+            throw new Error('Got rest: ' + doc.rest);
+        customTest && customTest(doc);
+    });
+}
+exports.testParseToken = testParseToken;
+function testParseTokenFailsafe(parser, txt, target, customTest) {
     it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), function () {
         console.log('      ---------------------------------------------------');
         var result = parser.getAST(txt, target);
@@ -14,8 +24,6 @@ function testParseToken(parser, txt, target, customTest) {
                 throw new Error('Type doesn\'t match. Got: ' + result.type);
             if (result.text.length == 0)
                 throw new Error('Empty text result');
-            if (result.rest.length != 0)
-                throw new Error('Got rest: ' + result.rest);
             if (customTest)
                 customTest(result);
         }
@@ -26,7 +34,7 @@ function testParseToken(parser, txt, target, customTest) {
         describeTree(result);
     });
 }
-exports.testParseToken = testParseToken;
+exports.testParseTokenFailsafe = testParseTokenFailsafe;
 function printDescription(token, maxLength) {
     if (/\n/.test(token.text))
         return;

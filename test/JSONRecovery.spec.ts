@@ -1,9 +1,10 @@
 declare var describe, it, require;
 
 import { Grammars, Parser, IToken } from '../dist';
-import { testParseToken, describeTree, printBNF } from './TestHelpers';
+import { testParseTokenFailsafe, describeTree, printBNF, testParseToken } from './TestHelpers';
 
 let inspect = require('util').inspect;
+let expect = require('expect');
 
 
 let grammar = `
@@ -19,11 +20,13 @@ WS                   ::= [#x20#x09#x0A#x0D]+   /* Space | Tab | \n | \r */
 false                ::= "false"
 null                 ::= "null"
 true                 ::= "true"
-object               ::= BEGIN_OBJECT ([recover://OBJECT_RECOVERY] member ([recover://COMMA_RECOVERY] VALUE_SEPARATOR member)*)? END_OBJECT
-OBJECT_RECOVERY      ::= [ebnf://not]"}"
-COMMA_RECOVERY       ::= [ebnf://not]","
-member               ::= string NAME_SEPARATOR value
-array                ::= BEGIN_ARRAY (value (VALUE_SEPARATOR value)*)? END_ARRAY
+object               ::= BEGIN_OBJECT ([recover://OBJECT_RECOVERY] ([recover://OBJECT_RECOVERY] member (VALUE_SEPARATOR member)*)?) END_OBJECT
+OBJECT_RECOVERY      ::= "}" | COMMA_RECOVERY
+ARRAY_RECOVERY       ::= "]" | COMMA_RECOVERY
+COMMA_RECOVERY       ::= ","
+MEMBER_RECOVERY      ::= ":"
+member               ::= [recover://MEMBER_RECOVERY] string NAME_SEPARATOR ([recover://OBJECT_RECOVERY] value)
+array                ::= BEGIN_ARRAY ([recover://ARRAY_RECOVERY] value ([recover://ARRAY_RECOVERY] VALUE_SEPARATOR value)*)? END_ARRAY
 
 number                ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") ( "-" | "+" )? ("0" | [1-9] [0-9]*))?
 
@@ -50,27 +53,22 @@ describe('JSON 2', () => {
 
     printBNF(parser);
 
-    testParseToken(parser, JSON.stringify(true));
-    testParseToken(parser, JSON.stringify(false));
-    testParseToken(parser, JSON.stringify(null));
-    testParseToken(parser, JSON.stringify(""));
-    testParseToken(parser, JSON.stringify("\""));
-    testParseToken(parser, JSON.stringify("\"{}"));
-    testParseToken(parser, JSON.stringify(10));
-    testParseToken(parser, JSON.stringify(-10));
-    testParseToken(parser, JSON.stringify(-10.1));
+    testParseTokenFailsafe(parser, '{"b": ZZZZ}', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
 
-    testParseToken(parser, JSON.stringify(10.1E123));
+    testParseTokenFailsafe(parser, '{"b": ZZZZ, "c": true}', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
 
-    testParseToken(parser, JSON.stringify({}));
-    testParseToken(parser, JSON.stringify({ a: true }));
-    testParseToken(parser, JSON.stringify({ a: false }));
-
-    testParseToken(parser, '{"a":false,"b":"asd\\n      asd " asd,"list":[1,2,3,true]}');
-
-
-    testParseToken(parser, JSON.stringify([]));
-    testParseToken(parser, JSON.stringify([{}]));
-    testParseToken(parser, JSON.stringify([null, false]));
+    testParseTokenFailsafe(parser, '{"a":false,"b": ZZZZ,"list":[1,2,3,true]}', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
   });
 });
