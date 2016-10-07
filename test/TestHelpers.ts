@@ -6,7 +6,7 @@ export const printBNF = (parser: Parser) => console.log(Grammars.W3C.emit(parser
 
 let inspect = require('util').inspect;
 
-export function testParseToken(parser: Parser, txt: string, target?: string) {
+export function testParseToken(parser: Parser, txt: string, target?: string, customTest?: (document: IToken) => void) {
   it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), () => {
     console.log('      ---------------------------------------------------');
     let result = parser.getAST(txt, target);
@@ -23,6 +23,8 @@ export function testParseToken(parser: Parser, txt: string, target?: string) {
 
       if (result.rest.length != 0)
         throw new Error('Got rest: ' + result.rest);
+
+      if (customTest) customTest(result);
     } catch (e) {
       parser.debug || console.log(txt + '\n' + inspect(result, false, 20, true));
       throw e;

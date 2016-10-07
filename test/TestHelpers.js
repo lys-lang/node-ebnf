@@ -2,7 +2,7 @@
 var dist_1 = require('../dist');
 exports.printBNF = function (parser) { return console.log(dist_1.Grammars.W3C.emit(parser)); };
 var inspect = require('util').inspect;
-function testParseToken(parser, txt, target) {
+function testParseToken(parser, txt, target, customTest) {
     it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), function () {
         console.log('      ---------------------------------------------------');
         var result = parser.getAST(txt, target);
@@ -16,6 +16,8 @@ function testParseToken(parser, txt, target) {
                 throw new Error('Empty text result');
             if (result.rest.length != 0)
                 throw new Error('Got rest: ' + result.rest);
+            if (customTest)
+                customTest(result);
         }
         catch (e) {
             parser.debug || console.log(txt + '\n' + inspect(result, false, 20, true));

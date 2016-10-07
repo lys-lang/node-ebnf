@@ -62,7 +62,10 @@ namespace BNF {
       bnf: [['"?"'], ['"*"'], ['"+"']]
     }, {
       name: 'PrimaryPreDecoration',
-      bnf: [['"!"'], ['"&"']]
+      bnf: [['&"[ebnf://"', "'['", 'DecorationName', '%Url1?', '"]"']]
+    }, {
+      name: 'DecorationName',
+      bnf: [['"ebnf://"', /[^\x5D#]+/]]
     }, {
       name: '%Primary',
       bnf: [
@@ -116,6 +119,15 @@ namespace BNF {
     }, {
       name: 'RULE_EOL',
       bnf: [[/\x0D/, /\x0A/], [/\x0A/], [/\x0D/]]
+    }, {
+      name: 'Link',
+      bnf: [["'['", 'Url', "']'"]]
+    }, {
+      name: 'Url',
+      bnf: [[/[^\x5D:/?#]/, '"://"', /[^\x5D#]+/, '%Url1?']]
+    }, {
+      name: '%Url1',
+      bnf: [['"#"', 'NCName']]
     }
   ];
 
@@ -126,12 +138,18 @@ namespace BNF {
   const decorationRE = /(\?|\+|\*)$/;
   const subExpressionRE = /^%/;
 
+  const preDecoratorConvertionTable = {
+    '&': 'ebnf://expect',
+    '!': 'ebnf://not',
+    '@': 'ebnf://pin'
+  };
+
   function getBNFRule(name: string | RegExp, parser: Parser): string {
     if (typeof name == 'string') {
       let decoration = decorationRE.exec(name);
       let preDecoration = preDecorationRE.exec(name);
 
-      let preDecorationText = preDecoration ? '/* ' + preDecoration[0] + ' */' : '';
+      let preDecorationText = preDecoration ? '[' + preDecoratorConvertionTable[preDecoration[0]] + ']' : '';
       let decorationText = decoration ? decoration[0] + ' ' : '';
 
       let subexpression = subExpressionRE.test(name);
@@ -145,7 +163,7 @@ namespace BNF {
         return preDecorationText + '(' + getBNFBody(name, parser) + ')' + decorationText;
       }
 
-      return name;
+      return name.replace(preDecorationRE, preDecorationText);
     } else {
       return name.source
         .replace(/\\(?:x|u)([a-zA-Z0-9]+)/g, '#x$1')
@@ -183,18 +201,6 @@ namespace BNF {
     return acumulator.join('\n');
   }
 
-  function getAllTerms(expr: IToken): string[] {
-    let terms = findChildrenByType(expr, 'term').map(term => {
-      return findChildrenByType(term, 'literal').concat(findChildrenByType(term, 'rule-name'))[0].text;
-    });
-
-    findChildrenByType(expr, 'list').forEach(expr => {
-      terms = terms.concat(getAllTerms(expr));
-    });
-
-    return terms;
-  }
-
   let subitems = 0;
 
   function restar(total, resta) {
@@ -204,7 +210,7 @@ namespace BNF {
 
   function convertRegex(txt: string): RegExp {
     return new RegExp(txt
-      .replace(/#x([a-zA-Z0-9]{4,8})/g, '\\u$1')
+      .replace(/#x([a-zA-Z0-9]{4})/g, '\\u$1')
       .replace(/#x([a-zA-Z0-9]{3})/g, '\\u0$1')
       .replace(/#x([a-zA-Z0-9]{2})/g, '\\x$1')
       .replace(/#x([a-zA-Z0-9]{1})/g, '\\x0$1')
@@ -228,7 +234,19 @@ namespace BNF {
       let preDecoration = '';
 
       if (anterior && anterior.type == 'PrimaryPreDecoration') {
-        preDecoration = anterior.text;
+        let name = findChildrenByType(anterior, 'DecorationName')[0];
+        if (name) {
+          for (let i in preDecoratorConvertionTable) {
+            if (preDecoratorConvertionTable[i] == name.text) {
+              preDecoration = i;
+              break;
+            }
+          }
+
+          if (!preDecoration) {
+            throw new Error('Unknown pre-decoration ' + JSON.stringify(name.text));
+          }
+        }
       }
 
       switch (x.type) {

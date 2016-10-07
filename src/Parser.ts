@@ -272,6 +272,11 @@ export class Parser {
 
               let foundAtLeastOne = false;
 
+              if (localTarget.lookupNegative) {
+                if (!tmpTxt.length)
+                  continue;
+              }
+
               do {
                 got = this.parse(tmpTxt, localTarget.name, recursion + 1);
 
