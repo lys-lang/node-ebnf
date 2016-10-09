@@ -8,6 +8,7 @@ describe('Parse W3CEBNF', function () {
     it('create parser', function () {
         parser = new dist_1.Parser(dist_1.Grammars.W3C.RULES, {});
         TestHelpers_1.testParseToken(parser, grammar);
+        TestHelpers_1.printBNF(parser);
     });
 });
 describe('Grammars.W3C parses itself', function () {

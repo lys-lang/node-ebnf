@@ -17,16 +17,10 @@ describe('JSON 2', function () {
         console.log('JSON:\n' + inspect(RULES, false, 20, true));
         var parser = new dist_1.Parser(RULES, {});
         TestHelpers_1.printBNF(parser);
-        parser.debug = true;
         TestHelpers_1.testParseTokenFailsafe(parser, '{"b": ZZZZ}', null, function (doc) {
             expect(doc.errors.length).toEqual(1);
             expect(doc.errors[0].token.type).toEqual('SyntaxError');
             expect(doc.errors[0].token.text).toEqual('ZZZZ');
-        });
-        TestHelpers_1.testParseTokenFailsafe(parser, '{"b": true ZZZZ }', null, function (doc) {
-            expect(doc.errors.length).toEqual(1);
-            // expect(doc.errors[0].token.type).toEqual('SyntaxError');
-            // expect(doc.errors[0].token.text).toEqual('ZZZZ');
         });
         TestHelpers_1.testParseTokenFailsafe(parser, '{"b": ZZZZ, "c": true}', null, function (doc) {
             expect(doc.errors.length).toEqual(1);

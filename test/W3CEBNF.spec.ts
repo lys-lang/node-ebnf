@@ -33,6 +33,7 @@ describe('Parse W3CEBNF', () => {
   it('create parser', () => {
     parser = new Parser(Grammars.W3C.RULES, {});
     testParseToken(parser, grammar);
+    printBNF(parser);
   });
 });
 
