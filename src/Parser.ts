@@ -15,7 +15,7 @@ export interface IRule {
   bnf: RulePrimary[][];
   recover?: string;
   fragment?: boolean;
-  pinned?: boolean;
+  pinned?: number;
 }
 
 export interface IToken {
@@ -287,6 +287,8 @@ export class Parser {
         options.forEach(phases => {
           if (out) return;
 
+          let pinned = false;
+
           let tmp: IToken = {
             type: type.name,
             text: '',
@@ -351,11 +353,36 @@ export class Parser {
                     break;
                 }
 
-                if (!got)
-                  got = this.parseRecovery(targetLex, tmpTxt, recursion);
+                if (got && targetLex.pinned == (i + 1)) {
+                  pinned = true;
+                  printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.type + ' PINNED');
+
+                }
 
                 if (!got)
-                  return;
+                  got = this.parseRecovery(targetLex, tmpTxt, recursion + 1);
+
+                if (!got) {
+                  if (pinned) {
+                    out = tmp;
+                    got = {
+                      type: 'SyntaxError',
+                      text: tmpTxt,
+                      children: [],
+                      end: tmpTxt.length,
+                      errors: [],
+                      fullText: '',
+                      parent: null,
+                      start: 0,
+                      rest: ''
+                    };
+                    new TokenError('Unexpected end of input: ' + tmpTxt, got);
+                    printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.type + ' ' + JSON.stringify(got.text));
+
+                  } else {
+                    return;
+                  }
+                }
 
                 foundAtLeastOne = true;
                 foundSomething = true;
@@ -453,7 +480,7 @@ export class Parser {
       let got: IToken;
 
       do {
-        got = this.parse(tmpTxt, recoverableToken.recover, recursion);
+        got = this.parse(tmpTxt, recoverableToken.recover, recursion + 1);
 
         if (got) {
           new TokenError('Unexpected input: ' + tmp.text, tmp);

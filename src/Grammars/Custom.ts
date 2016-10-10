@@ -50,7 +50,7 @@ namespace BNF {
       bnf: [['RULE_S*', 'NCName', 'RULE_WHITESPACE*', '"="', 'RULE_WHITESPACE*', 'AttributeValue']]
     }, {
       name: 'AttributeValue',
-      bnf: [['NCName']]
+      bnf: [['NCName'], [/[1-9][0-9]*/]]
     }, {
       name: '%Choice',
       bnf: [['SequenceOrDifference', '%_Choice_1*']],
@@ -161,10 +161,8 @@ namespace BNF {
       let decoration = decorationRE.exec(name);
       let preDecoration = preDecorationRE.exec(name);
 
-      let preDecorationText = preDecoration ? ' /* ' + preDecoration[0] : '';
+      let preDecorationText = preDecoration ? preDecoration[0] : '';
       let decorationText = decoration ? decoration[0] + ' ' : '';
-
-      if (preDecorationText) decorationText = decorationText + ' */';
 
       let subexpression = subExpressionRE.test(name);
 
@@ -177,7 +175,7 @@ namespace BNF {
         return preDecorationText + '(' + getBNFBody(name, parser) + ')' + decorationText;
       }
 
-      return name.replace(preDecorationRE, preDecorationText) + (preDecorationText ? ' */' : '');
+      return name.replace(preDecorationRE, preDecorationText);
     } else {
       return name.source
         .replace(/\\(?:x|u)([a-zA-Z0-9]+)/g, '#x$1')
@@ -265,7 +263,7 @@ namespace BNF {
         case 'SubItem':
           let name = '%' + (parentName + (subitems++));
 
-          createRule(tmpRules, x, name, pinned);
+          createRule(tmpRules, x, name);
 
           bnfSeq.push(preDecoration + name + decoration);
           break;
@@ -303,7 +301,7 @@ namespace BNF {
     return bnfSeq;
   }
 
-  function createRule(tmpRules: any[], token: IToken, name: string, pinned: boolean) {
+  function createRule(tmpRules: any[], token: IToken, name: string) {
     let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
 
     let attrNode = token.children.filter(x => x.type == 'Attributes')[0];
@@ -314,17 +312,16 @@ namespace BNF {
       attrNode.children.forEach(x => {
         let name = x.children.filter(x => x.type == 'NCName')[0].text;
         if (name in attributes) {
-          new TokenError("Duplicated attribute " + name, x);
+          throw new TokenError("Duplicated attribute " + name, x);
         } else {
-          attributes[name] = x.children.filter(x => x.type == 'AttributeValue')[0].text
+          attributes[name] = x.children.filter(x => x.type == 'AttributeValue')[0].text;
         }
       });
     }
 
     let rule: IRule = {
       name,
-      bnf,
-      pinned
+      bnf
     };
 
     if (name.indexOf('%') == 0)
@@ -332,6 +329,17 @@ namespace BNF {
 
     if (attributes["recoverUntil"]) {
       rule.recover = attributes["recoverUntil"];
+      if (rule.bnf.length > 1)
+        throw new TokenError('only one-option productions are suitable for error recovering', token);
+    }
+
+    if ("pin" in attributes) {
+      let num = parseInt(attributes["pin"]);
+      if (!isNaN(num)) {
+        rule.pinned = num;
+      }
+      if (rule.bnf.length > 1)
+        throw new TokenError('only one-option productions are suitable for pinning', token);
     }
 
     rule.fragment = rule.fragment || attributes["fragment"] == "true";
@@ -354,7 +362,7 @@ namespace BNF {
       .filter(x => x.type == 'Production')
       .map((x: any) => {
         let name = x.children.filter(x => x.type == 'NCName')[0].text;
-        createRule(tmpRules, x, name, false);
+        createRule(tmpRules, x, name);
       });
 
     return tmpRules;
