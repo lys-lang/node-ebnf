@@ -4,7 +4,7 @@ var TestHelpers_1 = require('./TestHelpers');
 var inspect = require('util').inspect;
 var expect = require('expect');
 describe('Lookahead Negative', function () {
-    var parser = new dist_1.Grammars.W3C.Parser("\n    Document ::= ((Boolean | IdentifieR) \" \"*)+\n    IdentifieR ::= [a-zA-Z]+\n    Boolean ::= (\"true\" | \"false\") [ebnf://not]IdentifieR\n  ", {});
+    var parser = new dist_1.Grammars.Custom.Parser("\n    Document ::= ((Boolean | IdentifieR) \" \"*)+\n    IdentifieR ::= [a-zA-Z]+\n    Boolean ::= (\"true\" | \"false\") !IdentifieR\n  ", {});
     TestHelpers_1.printBNF(parser);
     TestHelpers_1.testParseToken(parser, 'keyword', null, function (doc) {
         expect(doc.children[0].type).toEqual('IdentifieR');
@@ -53,7 +53,7 @@ describe('Lookahead Negative', function () {
     });
 });
 describe('Lookahead Positive', function () {
-    var parser = new dist_1.Grammars.W3C.Parser("\n    Document ::= ((FunctionName | Identifier | Parenthesis) \" \"*)+\n    Identifier ::= [a-zA-Z_]+\n    FunctionName ::= Identifier [ebnf://expect]\"(\"\n    Parenthesis ::= \"(\" ( [ebnf://not]\")\" [.])* \")\"\n  ", {});
+    var parser = new dist_1.Grammars.Custom.Parser("\n    Document ::= ((FunctionName | Identifier | Parenthesis) \" \"*)+\n    Identifier ::= [a-zA-Z_]+\n    FunctionName ::= Identifier &\"(\"\n    Parenthesis ::= \"(\" ( !\")\" [.])* \")\"\n  ", {});
     TestHelpers_1.testParseToken(parser, '()', null, function (doc) {
         expect(doc.children[0].type).toEqual('Parenthesis');
     });

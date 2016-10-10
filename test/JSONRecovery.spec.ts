@@ -9,7 +9,7 @@ let expect = require('expect');
 
 let grammar = `
 /* https://www.ietf.org/rfc/rfc4627.txt */
-value                ::= false | null | true | object | array | number | string
+value                ::= false | null | true | object | number | string | array
 BEGIN_ARRAY          ::= WS* #x5B WS*  /* [ left square bracket */
 BEGIN_OBJECT         ::= WS* #x7B WS*  /* { left curly bracket */
 END_ARRAY            ::= WS* #x5D WS*  /* ] right square bracket */
@@ -20,15 +20,17 @@ WS                   ::= [#x20#x09#x0A#x0D]+   /* Space | Tab | \n | \r */
 false                ::= "false"
 null                 ::= "null"
 true                 ::= "true"
-object               ::= BEGIN_OBJECT ([recover://OBJECT_RECOVERY] ([recover://OBJECT_RECOVERY] member (VALUE_SEPARATOR member)*)?) END_OBJECT
-OBJECT_RECOVERY      ::= "}" | COMMA_RECOVERY
-ARRAY_RECOVERY       ::= "]" | COMMA_RECOVERY
-COMMA_RECOVERY       ::= ","
-MEMBER_RECOVERY      ::= ":"
-member               ::= [recover://MEMBER_RECOVERY] string NAME_SEPARATOR ([recover://OBJECT_RECOVERY] value)
-array                ::= BEGIN_ARRAY ([recover://ARRAY_RECOVERY] value ([recover://ARRAY_RECOVERY] VALUE_SEPARATOR value)*)? END_ARRAY
+object               ::= BEGIN_OBJECT object_content? END_OBJECT
+object_content       ::= (member (VALUE_SEPARATOR member)*) { recoverUntil=END_OBJECT }
+Key                  ::= string { recoverUntil = NAME_SEPARATOR }
+OBJECT_RECOVERY      ::= END_OBJECT | VALUE_SEPARATOR
+ARRAY_RECOVERY       ::= END_ARRAY | VALUE_SEPARATOR
+member               ::= Key NAME_SEPARATOR value { recoverUntil=OBJECT_RECOVERY }
+array                ::= BEGIN_ARRAY array_content? END_ARRAY
+array_content        ::= array_value (VALUE_SEPARATOR array_value)* { recoverUntil=ARRAY_RECOVERY,fragment=true }
+array_value          ::= value { recoverUntil=ARRAY_RECOVERY, fragment=true }
 
-number                ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") ( "-" | "+" )? ("0" | [1-9] [0-9]*))?
+number               ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? (("e" | "E") ( "-" | "+" )? ("0" | [1-9] [0-9]*))?
 
 /* STRINGS */
 
@@ -41,19 +43,41 @@ describe('JSON 2', () => {
     let parser: Parser;
 
     it('create parser', () => {
-      parser = new Parser(Grammars.W3C.RULES, {});
-      testParseToken(parser, grammar);
+      printBNF(Grammars.Custom.parser);
+      // console.dir(Grammars.Custom.parser.getAST(grammar));
     });
   });
 
-  describe('Grammars.W3C parses JSON grammar', function () {
-    let RULES = Grammars.W3C.getRules(grammar);
-    console.log('JSON:\n' + inspect(RULES, false, 20, true));
-    let parser = new Parser(RULES, {});
+  describe('Grammars.Custom parses JSON grammar', function () {
+    let parser = new Grammars.Custom.Parser(grammar, {});
 
     printBNF(parser);
 
     testParseTokenFailsafe(parser, '{"b": ZZZZ}', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
+
+    testParseTokenFailsafe(parser, '[ZZZZ]', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
+
+    testParseTokenFailsafe(parser, '[1, ZZZZ]', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
+
+    testParseTokenFailsafe(parser, '[1, ZZZZ, 1]', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
+
+    testParseTokenFailsafe(parser, '[ZZZZ, 1]', null, (doc) => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');

@@ -14,7 +14,7 @@ parser.debug = true;
 
 describe('Parse BNF', () => {
   let lisp = `
-    <lisp-document>  ::= <s_expression> <lisp-document> | <RULE_WHITESPACE> <lisp-document> | <s_expression>
+    <lisp-document>  ::= <s_expression> <lisp-document> | <RULE_WHITESPACE> | <s_expression> <EOF> | <EOF>
     <s_expression>   ::= <atomic_symbol> | "(" <s_expression> "." <s_expression> ")" | <list>
     <list1>          ::= <RULE_WHITESPACE> <s_expression> <RULE_WHITESPACE> <list1> | <RULE_WHITESPACE> <s_expression>
     <RULE_WHITESPACE>::= <RULE_WS> | ""
@@ -44,6 +44,7 @@ describe('Parse BNF', () => {
 
 describe('Parse custom calculator', () => {
   let calc = `
+    <Document>         ::= <Equation> <EOF>
     <Equation>         ::= <BinaryOperation> | <Term>
     <Term>             ::= "(" <RULE_WHITESPACE> <Equation> <RULE_WHITESPACE> ")" | "(" <RULE_WHITESPACE> <Number> <RULE_WHITESPACE> ")" | <RULE_WHITESPACE> <Number> <RULE_WHITESPACE>
     <BinaryOperation>  ::= <Term> <RULE_WHITESPACE> <Operator> <RULE_WHITESPACE> <Term>

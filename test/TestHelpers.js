@@ -1,6 +1,5 @@
 "use strict";
-var dist_1 = require('../dist');
-exports.printBNF = function (parser) { return console.log(dist_1.Grammars.W3C.emit(parser)); };
+exports.printBNF = function (parser) { return console.log(parser.emitSource()); };
 var inspect = require('util').inspect;
 function testParseToken(parser, txt, target, customTest) {
     testParseTokenFailsafe(parser, txt, target, function (doc) {
@@ -15,9 +14,9 @@ exports.testParseToken = testParseToken;
 function testParseTokenFailsafe(parser, txt, target, customTest) {
     it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), function () {
         console.log('      ---------------------------------------------------');
-        var result = parser.getAST(txt, target);
-        parser.debug && console.log(txt + '\n' + inspect(result, false, 20, true));
+        var result;
         try {
+            result = parser.getAST(txt, target);
             if (!result)
                 throw new Error('Did not resolve');
             if (target && result.type != target)
@@ -28,7 +27,16 @@ function testParseTokenFailsafe(parser, txt, target, customTest) {
                 customTest(result);
         }
         catch (e) {
-            parser.debug || console.log(txt + '\n' + inspect(result, false, 20, true));
+            ;
+            parser.debug = true;
+            try {
+                result = parser.getAST(txt, target);
+                console.log(txt + '\n' + inspect(result, false, 20, true));
+            }
+            catch (ee) {
+                console.log(ee);
+            }
+            parser.debug = false;
             throw e;
         }
         describeTree(result);

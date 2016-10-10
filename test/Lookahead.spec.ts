@@ -7,10 +7,10 @@ let inspect = require('util').inspect;
 let expect = require('expect');
 
 describe('Lookahead Negative', () => {
-  let parser = new Grammars.W3C.Parser(`
+  let parser = new Grammars.Custom.Parser(`
     Document ::= ((Boolean | IdentifieR) " "*)+
     IdentifieR ::= [a-zA-Z]+
-    Boolean ::= ("true" | "false") [ebnf://not]IdentifieR
+    Boolean ::= ("true" | "false") !IdentifieR
   `, {});
 
   printBNF(parser);
@@ -64,11 +64,11 @@ describe('Lookahead Negative', () => {
 });
 
 describe('Lookahead Positive', () => {
-  let parser = new Grammars.W3C.Parser(`
+  let parser = new Grammars.Custom.Parser(`
     Document ::= ((FunctionName | Identifier | Parenthesis) " "*)+
     Identifier ::= [a-zA-Z_]+
-    FunctionName ::= Identifier [ebnf://expect]"("
-    Parenthesis ::= "(" ( [ebnf://not]")" [.])* ")"
+    FunctionName ::= Identifier &"("
+    Parenthesis ::= "(" ( !")" [.])* ")"
   `, {});
 
   testParseToken(parser, '()', null, (doc) => {

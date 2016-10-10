@@ -18,9 +18,7 @@
 // RULE_S	::=	#x9 | #xA | #xD | #x20
 // Comment	::=	'/*' ( [^*] | '*'+ [^*/] )* '*'* '*/'
 
-import { findChildrenByType } from '../SemanticHelpers';
-
-import { IRule, Parser as _Parser, IToken } from '..';
+import { IRule, Parser as _Parser, IToken, TokenError } from '..';
 import { findRuleByName } from '../Parser';
 
 namespace BNF {
@@ -28,7 +26,7 @@ namespace BNF {
     {
       name: 'Grammar',
       bnf: [
-        ['RULE_S*', '%Atomic*', 'EOF']
+        ['RULE_S*', 'Attributes?', 'RULE_S*', '%Atomic*', 'EOF']
       ]
     }, {
       name: '%Atomic',
@@ -36,10 +34,23 @@ namespace BNF {
       fragment: true
     }, {
       name: 'Production',
-      bnf: [['NCName', 'RULE_S*', '"::="', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', 'RULE_EOL+', 'RULE_S*']]
+      bnf: [['NCName', 'RULE_S*', '"::="', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', 'Attributes?', 'RULE_EOL+', 'RULE_S*']]
     }, {
       name: 'NCName',
       bnf: [[/[a-zA-Z][a-zA-Z_0-9]*/]]
+    }, {
+      name: 'Attributes',
+      bnf: [['"{"', 'Attribute', '%Attributes*', 'RULE_S*', '"}"']]
+    }, {
+      name: '%Attributes',
+      bnf: [['RULE_S*', '","', 'Attribute']],
+      fragment: true
+    }, {
+      name: 'Attribute',
+      bnf: [['RULE_S*', 'NCName', 'RULE_WHITESPACE*', '"="', 'RULE_WHITESPACE*', 'AttributeValue']]
+    }, {
+      name: 'AttributeValue',
+      bnf: [['NCName']]
     }, {
       name: '%Choice',
       bnf: [['SequenceOrDifference', '%_Choice_1*']],
@@ -50,7 +61,7 @@ namespace BNF {
       fragment: true
     }, {
       name: 'SequenceOrDifference',
-      bnf: [['RecoverRule?', '%Item', 'RULE_WHITESPACE*', '%_Item_1?']]
+      bnf: [['%Item', 'RULE_WHITESPACE*', '%_Item_1?']]
     }, {
       name: '%_Item_1',
       bnf: [['Minus', '%Item'], ['%Item*']],
@@ -67,13 +78,7 @@ namespace BNF {
       bnf: [['"?"'], ['"*"'], ['"+"']]
     }, {
       name: 'PrimaryPreDecoration',
-      bnf: [['&"[ebnf://"', "'['", 'DecorationName', '%Url1?', '"]"']]
-    }, {
-      name: 'RecoverRule',
-      bnf: [['RULE_WHITESPACE*', '"[recover://"', 'NCName', '"]"']]
-    }, {
-      name: 'DecorationName',
-      bnf: [['"ebnf://"', /[^\x5D#]+/]]
+      bnf: [['"&"'], ['"!"'], ['"~"']]
     }, {
       name: '%Primary',
       bnf: [
@@ -203,8 +208,7 @@ namespace BNF {
 
     parser.grammarRules.forEach(l => {
       if (!(/^%/.test(l.name))) {
-
-        let recover = l.recover ? ' /* { recoverUntil=' + l.recover + ' } */' : '';
+        let recover = l.recover ? ' { recoverUntil=' + l.recover + ' }' : '';
 
         acumulator.push(l.name + ' ::= ' + getBNFBody(l.name, parser) + recover);
       }
@@ -245,11 +249,23 @@ namespace BNF {
 
       let preDecoration = '';
 
+
+
+      if (anterior && anterior.type == 'PrimaryPreDecoration') {
+        preDecoration = anterior.text;
+      }
+
+      let pinned = preDecoration == '~';
+
+      if (pinned) {
+        preDecoration = '';
+      }
+
       switch (x.type) {
         case 'SubItem':
           let name = '%' + (parentName + (subitems++));
 
-          createRule(tmpRules, x, name);
+          createRule(tmpRules, x, name, pinned);
 
           bnfSeq.push(preDecoration + name + decoration);
           break;
@@ -257,16 +273,13 @@ namespace BNF {
         case 'StringLiteral':
           bnfSeq.push(preDecoration + x.text + decoration);
           break;
-
-        case 'RecoverRule':
-          bnfSeq["recover"] = findChildrenByType(x, 'NCName')[0].text;
-          break;
         case 'CharCode':
         case 'CharClass':
           if (decoration || preDecoration) {
             let newRule = {
               name: '%' + (parentName + (subitems++)),
-              bnf: [[convertRegex(x.text)]]
+              bnf: [[convertRegex(x.text)]],
+              pinned
             };
 
             tmpRules.push(newRule);
@@ -290,25 +303,38 @@ namespace BNF {
     return bnfSeq;
   }
 
-  function createRule(tmpRules: any[], token: IToken, name: string) {
+  function createRule(tmpRules: any[], token: IToken, name: string, pinned: boolean) {
     let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
+
+    let attrNode = token.children.filter(x => x.type == 'Attributes')[0];
+
+    let attributes: any = {};
+
+    if (attrNode) {
+      attrNode.children.forEach(x => {
+        let name = x.children.filter(x => x.type == 'NCName')[0].text;
+        if (name in attributes) {
+          new TokenError("Duplicated attribute " + name, x);
+        } else {
+          attributes[name] = x.children.filter(x => x.type == 'AttributeValue')[0].text
+        }
+      });
+    }
 
     let rule: IRule = {
       name,
-      bnf
+      bnf,
+      pinned
     };
-
-    let recover: string = null;
-
-    bnf.forEach(x => {
-      recover = recover || x["recover"];
-      delete x["recover"];
-    });
 
     if (name.indexOf('%') == 0)
       rule.fragment = true;
 
-    if (recover) rule.recover = recover;
+    if (attributes["recoverUntil"]) {
+      rule.recover = attributes["recoverUntil"];
+    }
+
+    rule.fragment = rule.fragment || attributes["fragment"] == "true";
 
     tmpRules.push(rule);
   }
@@ -328,7 +354,7 @@ namespace BNF {
       .filter(x => x.type == 'Production')
       .map((x: any) => {
         let name = x.children.filter(x => x.type == 'NCName')[0].text;
-        createRule(tmpRules, x, name);
+        createRule(tmpRules, x, name, false);
       });
 
     return tmpRules;
@@ -342,7 +368,6 @@ namespace BNF {
     constructor(source: string, options) {
       super(getRules(source), options);
     }
-
     emitSource(): string {
       return emit(this);
     }

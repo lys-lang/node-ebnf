@@ -162,8 +162,12 @@ namespace BNF {
   }
 
   export class Parser extends _Parser {
-    constructor(source: string, options) {
+    constructor(public source: string, options) {
       super(getRules(source), options);
+    }
+
+    emitSource(): string {
+      return this.source;
     }
   }
 }

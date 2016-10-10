@@ -2,7 +2,7 @@ import { IToken, Parser, Grammars } from '../dist';
 
 declare var require, it;
 
-export const printBNF = (parser: Parser) => console.log(Grammars.W3C.emit(parser));
+export const printBNF = (parser: Parser) => console.log(parser.emitSource());
 
 let inspect = require('util').inspect;
 
@@ -22,9 +22,12 @@ export function testParseToken(parser: Parser, txt: string, target?: string, cus
 export function testParseTokenFailsafe(parser: Parser, txt: string, target?: string, customTest?: (document: IToken) => void) {
   it(inspect(txt, false, 1, true) + ' must resolve into ' + (target || '(FIRST RULE)'), () => {
     console.log('      ---------------------------------------------------');
-    let result = parser.getAST(txt, target);
-    parser.debug && console.log(txt + '\n' + inspect(result, false, 20, true));
+
+    let result;
+
     try {
+      result = parser.getAST(txt, target);
+
       if (!result)
         throw new Error('Did not resolve');
 
@@ -36,7 +39,15 @@ export function testParseTokenFailsafe(parser: Parser, txt: string, target?: str
 
       if (customTest) customTest(result);
     } catch (e) {
-      parser.debug || console.log(txt + '\n' + inspect(result, false, 20, true));
+      ;
+      parser.debug = true;
+      try {
+        result = parser.getAST(txt, target);
+        console.log(txt + '\n' + inspect(result, false, 20, true));
+      } catch (ee) {
+        console.log(ee);
+      }
+      parser.debug = false;
       throw e;
     }
 
