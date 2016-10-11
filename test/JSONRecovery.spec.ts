@@ -21,11 +21,13 @@ false                ::= "false"
 null                 ::= "null"
 true                 ::= "true"
 object               ::= BEGIN_OBJECT object_content? END_OBJECT { pin=1 }
-object_content       ::= (member (VALUE_SEPARATOR member)*) { recoverUntil=END_OBJECT }
-Key                  ::= string { recoverUntil = NAME_SEPARATOR }
+object_content       ::= (member (object_n)*) { recoverUntil=OBJECT_RECOVERY }
+object_n             ::= VALUE_SEPARATOR member { recoverUntil=OBJECT_RECOVERY,fragment=true }
+Key                  ::= &(WS* '"') string { recoverUntil=VALUE_SEPARATOR, pin=1 }
 OBJECT_RECOVERY      ::= END_OBJECT | VALUE_SEPARATOR
 ARRAY_RECOVERY       ::= END_ARRAY | VALUE_SEPARATOR
-member               ::= Key NAME_SEPARATOR value { recoverUntil=OBJECT_RECOVERY, pin=2 }
+MEMBER_RECOVERY      ::= '"' | NAME_SEPARATOR | OBJECT_RECOVERY | VALUE_SEPARATOR
+member               ::= Key NAME_SEPARATOR value { recoverUntil=MEMBER_RECOVERY, pin=2 }
 array                ::= BEGIN_ARRAY array_content? END_ARRAY { pin=1 }
 array_content        ::= array_value (VALUE_SEPARATOR array_value)* { recoverUntil=ARRAY_RECOVERY,fragment=true }
 array_value          ::= value { recoverUntil=ARRAY_RECOVERY, fragment=true }
@@ -44,7 +46,7 @@ describe('JSON 2', () => {
 
     it('create parser', () => {
       printBNF(Grammars.Custom.parser);
-      console.dir(Grammars.Custom.getRules(grammar));
+      // console.dir(Grammars.Custom.getRules(grammar));
     });
   });
 
@@ -68,6 +70,27 @@ describe('JSON 2', () => {
     testParseTokenFailsafe(parser, '[ZZZZ', null, (doc) => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.children[0].type).toEqual('array');
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('ZZZZ');
+    });
+
+    testParseTokenFailsafe(parser, '{"s": true', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.children[0].type).toEqual('object');
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual('');
+    });
+
+    testParseTokenFailsafe(parser, '{"s": true, ZZZZ', null, (doc) => {
+      expect(doc.errors.length).toEqual(1);
+      expect(doc.children[0].type).toEqual('object');
+      expect(doc.errors[0].token.type).toEqual('SyntaxError');
+      expect(doc.errors[0].token.text).toEqual(', ZZZZ');
+    });
+
+    testParseTokenFailsafe(parser, '{"s": true, ZZZZ, "b": false', null, (doc) => {
+      expect(doc.errors.length).toEqual(2);
+      expect(doc.children[0].type).toEqual('object');
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });

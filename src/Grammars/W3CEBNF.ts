@@ -18,8 +18,6 @@
 // RULE_S	::=	#x9 | #xA | #xD | #x20
 // Comment	::=	'/*' ( [^*] | '*'+ [^*/] )* '*'* '*/'
 
-import { findChildrenByType } from '../SemanticHelpers';
-
 import { IRule, Parser as _Parser, IToken } from '..';
 import { findRuleByName } from '../Parser';
 
@@ -36,12 +34,12 @@ namespace BNF {
       fragment: true
     }, {
       name: 'Production',
-      bnf: [['NCName', 'RULE_S*', '"::="', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', 'RULE_EOL+', 'RULE_S*']]
+      bnf: [['NCName', 'RULE_S*', '"::="', 'RULE_WHITESPACE*', 'Choice', 'RULE_WHITESPACE*', 'RULE_EOL+', 'RULE_S*']]
     }, {
       name: 'NCName',
       bnf: [[/[a-zA-Z][a-zA-Z_0-9]*/]]
     }, {
-      name: '%Choice',
+      name: 'Choice',
       bnf: [['SequenceOrDifference', '%_Choice_1*']],
       fragment: true
     }, {
@@ -50,27 +48,21 @@ namespace BNF {
       fragment: true
     }, {
       name: 'SequenceOrDifference',
-      bnf: [['RecoverRule?', '%Item', 'RULE_WHITESPACE*', '%_Item_1?']]
+      bnf: [['Item', 'RULE_WHITESPACE*', '%_Item_1?']]
     }, {
       name: '%_Item_1',
-      bnf: [['Minus', '%Item'], ['%Item*']],
+      bnf: [['Minus', 'Item'], ['Item*']],
       fragment: true
     }, {
       name: 'Minus',
       bnf: [['"-"']]
     }, {
-      name: '%Item',
-      bnf: [['RULE_WHITESPACE*', 'PrimaryPreDecoration?', '%Primary', 'PrimaryDecoration?']],
+      name: 'Item',
+      bnf: [['RULE_WHITESPACE*', '%Primary', 'PrimaryDecoration?']],
       fragment: true
     }, {
       name: 'PrimaryDecoration',
       bnf: [['"?"'], ['"*"'], ['"+"']]
-    }, {
-      name: 'PrimaryPreDecoration',
-      bnf: [['&"[ebnf://"', "'['", 'DecorationName', '%Url1?', '"]"']]
-    }, {
-      name: 'RecoverRule',
-      bnf: [['RULE_WHITESPACE*', '"[recover://"', 'NCName', '"]"']]
     }, {
       name: 'DecorationName',
       bnf: [['"ebnf://"', /[^\x5D#]+/]]
@@ -86,10 +78,11 @@ namespace BNF {
       fragment: true
     }, {
       name: 'SubItem',
-      bnf: [['"("', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', '")"']]
+      bnf: [['"("', 'RULE_WHITESPACE*', 'Choice', 'RULE_WHITESPACE*', '")"']]
     }, {
       name: 'StringLiteral',
-      bnf: [[`'"'`, /[^"]*/, `'"'`], [`"'"`, /[^']*/, `"'"`]]
+      bnf: [[`'"'`, /[^"]*/, `'"'`], [`"'"`, /[^']*/, `"'"`]],
+      pinned: 1
     }, {
       name: 'CharCode',
       bnf: [['"#x"', /[0-9a-zA-Z]+/]]
@@ -126,7 +119,7 @@ namespace BNF {
       bnf: [['"/*"', '%RULE_Comment_Body*', '"*/"']]
     }, {
       name: '%RULE_Comment_Body',
-      bnf: [[/[^*]/], ['"*"+', /[^/]*/]],
+      bnf: [['!"*/"', /[^*]/]],
       fragment: true
     }, {
       name: 'RULE_EOL',
@@ -153,26 +146,23 @@ namespace BNF {
 
   function getBNFRule(name: string | RegExp, parser: Parser): string {
     if (typeof name == 'string') {
-      let decoration = decorationRE.exec(name);
-      let preDecoration = preDecorationRE.exec(name);
-
-      let preDecorationText = preDecoration ? ' /* ' + preDecoration[0] : '';
-      let decorationText = decoration ? decoration[0] + ' ' : '';
-
-      if (preDecorationText) decorationText = decorationText + ' */';
+      if (preDecorationRE.test(name))
+        return '';
 
       let subexpression = subExpressionRE.test(name);
 
       if (subexpression) {
+        let decoration = decorationRE.exec(name);
+        let decorationText = decoration ? decoration[0] + ' ' : '';
         let lonely = isLonelyRule(name, parser);
 
         if (lonely)
-          return preDecorationText + getBNFBody(name, parser) + decorationText;
+          return getBNFBody(name, parser) + decorationText;
 
-        return preDecorationText + '(' + getBNFBody(name, parser) + ')' + decorationText;
+        return '(' + getBNFBody(name, parser) + ')' + decorationText;
       }
 
-      return name.replace(preDecorationRE, preDecorationText) + (preDecorationText ? ' */' : '');
+      return name;
     } else {
       return name.source
         .replace(/\\(?:x|u)([a-zA-Z0-9]+)/g, '#x$1')
@@ -257,10 +247,6 @@ namespace BNF {
         case 'StringLiteral':
           bnfSeq.push(preDecoration + x.text + decoration);
           break;
-
-        case 'RecoverRule':
-          bnfSeq["recover"] = findChildrenByType(x, 'NCName')[0].text;
-          break;
         case 'CharCode':
         case 'CharClass':
           if (decoration || preDecoration) {
@@ -276,8 +262,6 @@ namespace BNF {
             bnfSeq.push(convertRegex(x.text));
           }
           break;
-
-        case 'PrimaryPreDecoration':
         case 'PrimaryDecoration':
           break;
         default:

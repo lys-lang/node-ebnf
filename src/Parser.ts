@@ -214,6 +214,9 @@ export class Parser {
     return 'CANNOT EMIT SOURCE FROM BASE Parser';
   }
 
+  // lookup(txt: string, target: string): boolean {
+
+  // }
   parse(txt: string, target: string, recursion = 0): IToken {
     let out = null;
 
@@ -229,22 +232,22 @@ export class Parser {
 
     let targetLex = findRuleByName(type.name, this);
 
-    if (!targetLex && type.name == 'EOF' && txt.length) {
-      return null;
-    }
-
-    if (txt === "") {
-      return {
-        type: 'EOF',
-        text: '',
-        rest: '',
-        start: 0,
-        end: 0,
-        fullText: '',
-        errors: [],
-        children: [],
-        parent: null
-      };
+    if (type.name == 'EOF') {
+      if (txt.length) {
+        return null;
+      } else if (txt.length == 0) {
+        return {
+          type: 'EOF',
+          text: '',
+          rest: '',
+          start: 0,
+          end: 0,
+          fullText: '',
+          errors: [],
+          children: [],
+          parent: null
+        };
+      }
     }
 
 
@@ -321,11 +324,6 @@ export class Parser {
 
               let foundAtLeastOne = false;
 
-              if (localTarget.lookupNegative) {
-                if (!tmpTxt.length)
-                  continue;
-              }
-
               do {
                 got = this.parse(tmpTxt, localTarget.name, recursion + 1);
 
@@ -333,23 +331,19 @@ export class Parser {
                 // negative lookup, if it does not matches, we should continue
                 if (localTarget.lookupNegative) {
                   if (got)
-                    return;
+                    return /* cancel this path */;
                   break;
                 }
 
                 if (localTarget.lookupPositive) {
-                  if (!got || got.type == 'EOF')
+                  if (!got)
                     return;
                 }
 
-                if (got && got.type == 'EOF')
-                  continue;
-
-                if (!got && localTarget.isOptional)
-                  break;
-
                 if (!got) {
-                  if (foundAtLeastOne && localTarget.atLeastOne ? tmp : null)
+                  if (localTarget.isOptional)
+                    break;
+                  if (localTarget.atLeastOne && foundAtLeastOne)
                     break;
                 }
 
@@ -454,6 +448,10 @@ export class Parser {
           }
         });
       }
+    }
+
+    if (!out) {
+      printable && console.log(target + ' NOT RESOLVED FROM ' + txt);
     }
 
     return out;

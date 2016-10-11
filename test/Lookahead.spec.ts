@@ -15,15 +15,79 @@ describe('Lookahead Negative', () => {
 
   printBNF(parser);
 
-  testParseToken(parser, 'keyword', null, (doc) => {
-    expect(doc.children[0].type).toEqual('IdentifieR');
-  });
   testParseToken(parser, 'true', 'Boolean', (doc) => {
     expect(doc.type).toEqual('Boolean');
   });
   testParseToken(parser, 'false', 'Boolean', (doc) => {
     expect(doc.type).toEqual('Boolean');
   });
+
+  testParseToken(parser, 'keyword', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+  });
+
+  testParseToken(parser, 'true', null, (doc) => {
+    expect(doc.children[0].type).toEqual('Boolean');
+  });
+  testParseToken(parser, 'false', null, (doc) => {
+    expect(doc.children[0].type).toEqual('Boolean');
+  });
+  testParseToken(parser, 'trueAAA', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+  });
+  testParseToken(parser, 'falseaAAA', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+  });
+
+  testParseToken(parser, 'keyword a', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+    expect(doc.children[1].type).toEqual('IdentifieR');
+  });
+  testParseToken(parser, 'true a', null, (doc) => {
+    expect(doc.children[0].type).toEqual('Boolean');
+    expect(doc.children[1].type).toEqual('IdentifieR');
+  });
+  testParseToken(parser, 'false a', null, (doc) => {
+    expect(doc.children[0].type).toEqual('Boolean');
+    expect(doc.children[1].type).toEqual('IdentifieR');
+  });
+  testParseToken(parser, 'trueAAA a', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+    expect(doc.children[1].type).toEqual('IdentifieR');
+  });
+  testParseToken(parser, 'falseaAAA a', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+    expect(doc.children[1].type).toEqual('IdentifieR');
+  });
+  testParseToken(parser, 'falseaAAA a', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+    expect(doc.children[1].type).toEqual('IdentifieR');
+  });
+});
+
+
+describe('Lookahead Positive', () => {
+  let parser = new Grammars.Custom.Parser(`
+    Document ::= ((Boolean | IdentifieR) " "*)+
+    IdentifieR ::= [a-zA-Z]+
+    Boolean ::= ("true" | "false") &Eol
+    Eol ::= " " | Eof
+    Eof ::= EOF
+  `, {});
+
+  printBNF(parser);
+
+  testParseToken(parser, 'true', 'Boolean', (doc) => {
+    expect(doc.type).toEqual('Boolean');
+  });
+  testParseToken(parser, 'false', 'Boolean', (doc) => {
+    expect(doc.type).toEqual('Boolean');
+  });
+
+  testParseToken(parser, 'keyword', null, (doc) => {
+    expect(doc.children[0].type).toEqual('IdentifieR');
+  });
+
   testParseToken(parser, 'true', null, (doc) => {
     expect(doc.children[0].type).toEqual('Boolean');
   });

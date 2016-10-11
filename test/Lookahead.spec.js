@@ -6,14 +6,63 @@ var expect = require('expect');
 describe('Lookahead Negative', function () {
     var parser = new dist_1.Grammars.Custom.Parser("\n    Document ::= ((Boolean | IdentifieR) \" \"*)+\n    IdentifieR ::= [a-zA-Z]+\n    Boolean ::= (\"true\" | \"false\") !IdentifieR\n  ", {});
     TestHelpers_1.printBNF(parser);
-    TestHelpers_1.testParseToken(parser, 'keyword', null, function (doc) {
-        expect(doc.children[0].type).toEqual('IdentifieR');
-    });
     TestHelpers_1.testParseToken(parser, 'true', 'Boolean', function (doc) {
         expect(doc.type).toEqual('Boolean');
     });
     TestHelpers_1.testParseToken(parser, 'false', 'Boolean', function (doc) {
         expect(doc.type).toEqual('Boolean');
+    });
+    TestHelpers_1.testParseToken(parser, 'keyword', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'true', null, function (doc) {
+        expect(doc.children[0].type).toEqual('Boolean');
+    });
+    TestHelpers_1.testParseToken(parser, 'false', null, function (doc) {
+        expect(doc.children[0].type).toEqual('Boolean');
+    });
+    TestHelpers_1.testParseToken(parser, 'trueAAA', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'falseaAAA', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'keyword a', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+        expect(doc.children[1].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'true a', null, function (doc) {
+        expect(doc.children[0].type).toEqual('Boolean');
+        expect(doc.children[1].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'false a', null, function (doc) {
+        expect(doc.children[0].type).toEqual('Boolean');
+        expect(doc.children[1].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'trueAAA a', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+        expect(doc.children[1].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'falseaAAA a', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+        expect(doc.children[1].type).toEqual('IdentifieR');
+    });
+    TestHelpers_1.testParseToken(parser, 'falseaAAA a', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
+        expect(doc.children[1].type).toEqual('IdentifieR');
+    });
+});
+describe('Lookahead Positive', function () {
+    var parser = new dist_1.Grammars.Custom.Parser("\n    Document ::= ((Boolean | IdentifieR) \" \"*)+\n    IdentifieR ::= [a-zA-Z]+\n    Boolean ::= (\"true\" | \"false\") &Eol\n    Eol ::= \" \" | Eof\n    Eof ::= EOF\n  ", {});
+    TestHelpers_1.printBNF(parser);
+    TestHelpers_1.testParseToken(parser, 'true', 'Boolean', function (doc) {
+        expect(doc.type).toEqual('Boolean');
+    });
+    TestHelpers_1.testParseToken(parser, 'false', 'Boolean', function (doc) {
+        expect(doc.type).toEqual('Boolean');
+    });
+    TestHelpers_1.testParseToken(parser, 'keyword', null, function (doc) {
+        expect(doc.children[0].type).toEqual('IdentifieR');
     });
     TestHelpers_1.testParseToken(parser, 'true', null, function (doc) {
         expect(doc.children[0].type).toEqual('Boolean');
