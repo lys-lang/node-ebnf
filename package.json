@@ -1,6 +1,6 @@
 {
   "name": "ebnf",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Creates an AST parser from a [E]BNF file",
   "main": "dist/index.js",
   "scripts": {
