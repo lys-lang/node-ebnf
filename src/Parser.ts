@@ -5,6 +5,7 @@ declare var global;
 const UPPER_SNAKE_RE = /^[A-Z0-9_]+$/;
 const decorationRE = /(\?|\+|\*)$/;
 const preDecorationRE = /^(@|&|!)/;
+const WS_RULE = 'WS';
 
 import { TokenError } from './TokenError';
 
@@ -16,6 +17,7 @@ export interface IRule {
   recover?: string;
   fragment?: boolean;
   pinned?: number;
+  implicitWs?: boolean;
 }
 
 export interface IToken {
@@ -147,25 +149,45 @@ export class Parser {
         this.cachedRules[parsedName.name] = rule;
       }
 
-      rule.bnf.forEach(options => {
-        if (typeof options[0] === 'string') {
-          let parsed = parseRuleName(options[0] as string);
-          if (parsed.name == rule.name) {
-            let error = 'Left recursion is not allowed, rule: ' + rule.name;
+      if (!rule.bnf || !rule.bnf.length) {
+        let error = 'Missing rule content, rule: ' + rule.name;
 
-            if (errors.indexOf(error) == -1)
-              errors.push(error);
-          }
-        }
+        if (errors.indexOf(error) == -1)
+          errors.push(error);
+      } else {
+        rule.bnf.forEach(options => {
+          if (typeof options[0] === 'string') {
+            let parsed = parseRuleName(options[0] as string);
+            if (parsed.name == rule.name) {
+              let error = 'Left recursion is not allowed, rule: ' + rule.name;
 
-        options.forEach(option => {
-          if (typeof option == "string") {
-            let name = parseRuleName(option);
-            if (!name.isLiteral && neededRules.indexOf(name.name) == -1 && ignoreMissingRules.indexOf(name.name) == -1)
-              neededRules.push(name.name);
+              if (errors.indexOf(error) == -1)
+                errors.push(error);
+            }
           }
+
+          options.forEach(option => {
+            if (typeof option == "string") {
+              let name = parseRuleName(option);
+              if (!name.isLiteral && neededRules.indexOf(name.name) == -1 && ignoreMissingRules.indexOf(name.name) == -1)
+                neededRules.push(name.name);
+            }
+          });
         });
-      });
+      }
+
+      if (WS_RULE == rule.name)
+        rule.implicitWs = false;
+
+      if (rule.implicitWs) {
+        if (neededRules.indexOf(WS_RULE) == -1)
+          neededRules.push(WS_RULE);
+      }
+
+      if (rule.recover) {
+        if (neededRules.indexOf(rule.recover) == -1)
+          neededRules.push(rule.recover);
+      }
     });
 
     neededRules.forEach(ruleName => {
@@ -214,9 +236,6 @@ export class Parser {
     return 'CANNOT EMIT SOURCE FROM BASE Parser';
   }
 
-  // lookup(txt: string, target: string): boolean {
-
-  // }
   parse(txt: string, target: string, recursion = 0): IToken {
     let out = null;
 
@@ -325,7 +344,24 @@ export class Parser {
               let foundAtLeastOne = false;
 
               do {
-                got = this.parse(tmpTxt, localTarget.name, recursion + 1);
+                got = null;
+
+                if (targetLex.implicitWs) {
+                  got = this.parse(tmpTxt, localTarget.name, recursion + 1);
+
+                  if (!got) {
+                    let WS = this.parse(tmpTxt, WS_RULE, recursion + 1);
+                    if (WS) {
+                      tmp.text = tmp.text + WS.text;
+                      tmp.end = tmp.text.length;
+
+                      tmpTxt = tmpTxt.substr(WS.text.length);
+                      position += WS.text.length;
+                    }
+                  }
+                }
+
+                got = got || this.parse(tmpTxt, localTarget.name, recursion + 1);
 
                 // rule ::= "true" ![a-zA-Z]
                 // negative lookup, if it does not matches, we should continue

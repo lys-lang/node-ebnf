@@ -342,6 +342,12 @@ namespace BNF {
         throw new TokenError('only one-option productions are suitable for pinning', token);
     }
 
+    if ("ws" in attributes) {
+      rule.implicitWs = attributes["ws"] != 'explicit';
+    } else {
+      rule.implicitWs = null;
+    }
+
     rule.fragment = rule.fragment || attributes["fragment"] == "true";
 
     tmpRules.push(rule);
@@ -356,6 +362,25 @@ namespace BNF {
       throw ast.errors[0];
     }
 
+    let implicitWs = null;
+
+    let attrNode = ast.children.filter(x => x.type == 'Attributes')[0];
+
+    let attributes: any = {};
+
+    if (attrNode) {
+      attrNode.children.forEach(x => {
+        let name = x.children.filter(x => x.type == 'NCName')[0].text;
+        if (name in attributes) {
+          throw new TokenError("Duplicated attribute " + name, x);
+        } else {
+          attributes[name] = x.children.filter(x => x.type == 'AttributeValue')[0].text;
+        }
+      });
+    }
+
+    implicitWs = attributes['ws'] == 'implicit';
+
     let tmpRules = [];
 
     ast.children
@@ -364,6 +389,11 @@ namespace BNF {
         let name = x.children.filter(x => x.type == 'NCName')[0].text;
         createRule(tmpRules, x, name);
       });
+
+    tmpRules.forEach(rule => {
+      if (rule.implicitWs === null)
+        rule.implicitWs = implicitWs;
+    });
 
     return tmpRules;
   }
