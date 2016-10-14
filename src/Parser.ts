@@ -350,14 +350,24 @@ export class Parser {
                   got = this.parse(tmpTxt, localTarget.name, recursion + 1);
 
                   if (!got) {
-                    let WS = this.parse(tmpTxt, WS_RULE, recursion + 1);
-                    if (WS) {
-                      tmp.text = tmp.text + WS.text;
-                      tmp.end = tmp.text.length;
+                    let WS: IToken;
 
-                      tmpTxt = tmpTxt.substr(WS.text.length);
-                      position += WS.text.length;
-                    }
+                    do {
+                      WS = this.parse(tmpTxt, WS_RULE, recursion + 1);
+
+                      if (WS) {
+                        tmp.text = tmp.text + WS.text;
+                        tmp.end = tmp.text.length;
+
+                        WS.parent = tmp;
+                        tmp.children.push(WS);
+
+                        tmpTxt = tmpTxt.substr(WS.text.length);
+                        position += WS.text.length;
+                      } else {
+                        break;
+                      }
+                    } while (WS && WS.text.length);
                   }
                 }
 
