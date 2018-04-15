@@ -34,6 +34,3 @@ let RULES = Grammars.Custom.getRules(sourceCode);
 console.log(`*/
 
 module.exports = ${util.inspect(RULES, false, 20, false)};`);
-
-
-

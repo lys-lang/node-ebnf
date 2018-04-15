@@ -5,7 +5,6 @@ import { testParseToken, describeTree, printBNF } from './TestHelpers';
 
 let inspect = require('util').inspect;
 
-
 let grammar = `
 /* https://www.ietf.org/rfc/rfc4627.txt */
 value                ::= false | null | true | object | array | number | string
@@ -49,9 +48,9 @@ describe('JSON', () => {
     });
   });
 
-  describe('Grammars.W3C parses JSON grammar', function () {
+  describe('Grammars.W3C parses JSON grammar', function() {
     let RULES = Grammars.W3C.getRules(grammar);
-    
+
     let parser = new Parser(RULES, {});
 
     printBNF(parser);
@@ -59,15 +58,15 @@ describe('JSON', () => {
     testParseToken(parser, JSON.stringify(true));
     testParseToken(parser, JSON.stringify(false));
     testParseToken(parser, JSON.stringify(null));
-    testParseToken(parser, JSON.stringify(""));
-    testParseToken(parser, JSON.stringify("\""));
-    testParseToken(parser, JSON.stringify("\"{}"));
+    testParseToken(parser, JSON.stringify(''));
+    testParseToken(parser, JSON.stringify('"'));
+    testParseToken(parser, JSON.stringify('"{}'));
     testParseToken(parser, JSON.stringify(10));
     testParseToken(parser, JSON.stringify(-10));
     testParseToken(parser, JSON.stringify(-10.1));
 
     parser.debug = true;
-    testParseToken(parser, JSON.stringify(10.1E123));
+    testParseToken(parser, JSON.stringify(10.1e123));
     parser.debug = false;
 
     testParseToken(parser, JSON.stringify({}));
@@ -75,10 +74,15 @@ describe('JSON', () => {
     testParseToken(parser, JSON.stringify({ a: false }));
 
     parser.debug = true;
-    testParseToken(parser, JSON.stringify({
-      a: false, b: `asd
-      asd `, list: [1, 2, 3, true]
-    }));
+    testParseToken(
+      parser,
+      JSON.stringify({
+        a: false,
+        b: `asd
+      asd `,
+        list: [1, 2, 3, true]
+      })
+    );
     parser.debug = false;
 
     testParseToken(parser, JSON.stringify([]));

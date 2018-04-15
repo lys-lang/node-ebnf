@@ -1,4 +1,3 @@
-
 import { IToken } from './Parser';
 
 /**

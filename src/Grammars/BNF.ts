@@ -27,76 +27,165 @@ namespace BNF {
   export const RULES: IRule[] = [
     {
       name: 'syntax',
-      bnf: [
-        ['RULE_EOL*', 'rule+']
-      ]
-    }, {
+      bnf: [['RULE_EOL*', 'rule+']]
+    },
+    {
       name: 'rule',
       bnf: [
-        ['" "*', '"<"', 'rule-name', '">"', '" "*', '"::="', 'firstExpression', 'otherExpression*', '" "*', 'RULE_EOL+', '" "*']
+        [
+          '" "*',
+          '"<"',
+          'rule-name',
+          '">"',
+          '" "*',
+          '"::="',
+          'firstExpression',
+          'otherExpression*',
+          '" "*',
+          'RULE_EOL+',
+          '" "*'
+        ]
       ]
-    }, {
+    },
+    {
       name: 'firstExpression',
-      bnf: [
-        ['" "*', 'list']
-      ]
-    }, {
+      bnf: [['" "*', 'list']]
+    },
+    {
       name: 'otherExpression',
-      bnf: [
-        ['" "*', '"|"', '" "*', 'list'],
-      ]
-    }, {
+      bnf: [['" "*', '"|"', '" "*', 'list']]
+    },
+    {
       name: 'RULE_EOL',
-      bnf: [
-        ['"\\r"'],
-        ['"\\n"']
-      ]
-    }, {
+      bnf: [['"\\r"'], ['"\\n"']]
+    },
+    {
       name: 'list',
-      bnf: [
-        ['term', '" "*', 'list'],
-        ['term']
-      ]
-    }, {
+      bnf: [['term', '" "*', 'list'], ['term']]
+    },
+    {
       name: 'term',
-      bnf: [
-        ['literal'],
-        ['"<"', 'rule-name', '">"'],
-      ]
-    }, {
+      bnf: [['literal'], ['"<"', 'rule-name', '">"']]
+    },
+    {
       name: 'literal',
-      bnf: [
-        [`'"'`, 'RULE_CHARACTER1*', `'"'`],
-        [`"'"`, 'RULE_CHARACTER2*', `"'"`],
-      ]
-    }, {
+      bnf: [[`'"'`, 'RULE_CHARACTER1*', `'"'`], [`"'"`, 'RULE_CHARACTER2*', `"'"`]]
+    },
+    {
       name: 'RULE_CHARACTER',
       bnf: [['" "'], ['RULE_LETTER'], ['RULE_DIGIT'], ['RULE_SYMBOL']]
-    }, {
+    },
+    {
       name: 'RULE_LETTER',
       bnf: [
-        ['"A"'], ['"B"'], ['"C"'], ['"D"'], ['"E"'], ['"F"'], ['"G"'], ['"H"'], ['"I"'], ['"J"'], ['"K"'], ['"L"'], ['"M"'], ['"N"'], ['"O"'], ['"P"'], ['"Q"'], ['"R"'], ['"S"'], ['"T"'], ['"U"'], ['"V"'], ['"W"'], ['"X"'], ['"Y"'], ['"Z"'], ['"a"'], ['"b"'], ['"c"'], ['"d"'], ['"e"'], ['"f"'], ['"g"'], ['"h"'], ['"i"'], ['"j"'], ['"k"'], ['"l"'], ['"m"'], ['"n"'], ['"o"'], ['"p"'], ['"q"'], ['"r"'], ['"s"'], ['"t"'], ['"u"'], ['"v"'], ['"w"'], ['"x"'], ['"y"'], ['"z"']
+        ['"A"'],
+        ['"B"'],
+        ['"C"'],
+        ['"D"'],
+        ['"E"'],
+        ['"F"'],
+        ['"G"'],
+        ['"H"'],
+        ['"I"'],
+        ['"J"'],
+        ['"K"'],
+        ['"L"'],
+        ['"M"'],
+        ['"N"'],
+        ['"O"'],
+        ['"P"'],
+        ['"Q"'],
+        ['"R"'],
+        ['"S"'],
+        ['"T"'],
+        ['"U"'],
+        ['"V"'],
+        ['"W"'],
+        ['"X"'],
+        ['"Y"'],
+        ['"Z"'],
+        ['"a"'],
+        ['"b"'],
+        ['"c"'],
+        ['"d"'],
+        ['"e"'],
+        ['"f"'],
+        ['"g"'],
+        ['"h"'],
+        ['"i"'],
+        ['"j"'],
+        ['"k"'],
+        ['"l"'],
+        ['"m"'],
+        ['"n"'],
+        ['"o"'],
+        ['"p"'],
+        ['"q"'],
+        ['"r"'],
+        ['"s"'],
+        ['"t"'],
+        ['"u"'],
+        ['"v"'],
+        ['"w"'],
+        ['"x"'],
+        ['"y"'],
+        ['"z"']
       ]
-    }, {
+    },
+    {
       name: 'RULE_DIGIT',
-      bnf: [
-        ['"0"'], ['"1"'], ['"2"'], ['"3"'], ['"4"'], ['"5"'], ['"6"'], ['"7"'], ['"8"'], ['"9"']
-      ]
-    }, {
+      bnf: [['"0"'], ['"1"'], ['"2"'], ['"3"'], ['"4"'], ['"5"'], ['"6"'], ['"7"'], ['"8"'], ['"9"']]
+    },
+    {
       name: 'RULE_SYMBOL',
       bnf: [
-        ['"-"'], ['"_"'], ['"!"'], ['"#"'], ['"$"'], ['"%"'], ['"&"'], ['"("'], ['")"'], ['"*"'], ['"+"'], ['","'], ['"-"'], ['"."'], ['"/"'], ['":"'], ['";"'], ['"<"'], ['"="'], ['">"'], ['"?"'], ['"@"'], ['"["'], ['"\\"'], ['"]"'], ['"^"'], ['"_"'], ['"`"'], ['"{"'], ['"|"'], ['"}"'], ['"~"']
+        ['"-"'],
+        ['"_"'],
+        ['"!"'],
+        ['"#"'],
+        ['"$"'],
+        ['"%"'],
+        ['"&"'],
+        ['"("'],
+        ['")"'],
+        ['"*"'],
+        ['"+"'],
+        ['","'],
+        ['"-"'],
+        ['"."'],
+        ['"/"'],
+        ['":"'],
+        ['";"'],
+        ['"<"'],
+        ['"="'],
+        ['">"'],
+        ['"?"'],
+        ['"@"'],
+        ['"["'],
+        ['"\\"'],
+        ['"]"'],
+        ['"^"'],
+        ['"_"'],
+        ['"`"'],
+        ['"{"'],
+        ['"|"'],
+        ['"}"'],
+        ['"~"']
       ]
-    }, {
+    },
+    {
       name: 'RULE_CHARACTER1',
       bnf: [['RULE_CHARACTER'], [`"'"`]]
-    }, {
+    },
+    {
       name: 'RULE_CHARACTER2',
       bnf: [['RULE_CHARACTER'], [`'"'`]]
-    }, {
+    },
+    {
       name: 'rule-name',
       bnf: [['RULE_LETTER', 'RULE_CHAR*']]
-    }, {
+    },
+    {
       name: 'RULE_CHAR',
       bnf: [['RULE_LETTER'], ['RULE_DIGIT'], ['"_"'], ['"-"']]
     }
@@ -116,9 +205,8 @@ namespace BNF {
     return terms;
   }
 
-
   export function getRules(source: string): IRule[] {
-    let ast =  parser.getAST(source);
+    let ast = parser.getAST(source);
 
     if (!ast) throw new Error('Could not parse ' + source);
 
@@ -131,9 +219,7 @@ namespace BNF {
     let ret = rules.map(rule => {
       let name = findChildrenByType(rule, 'rule-name')[0].text;
 
-      let expressions =
-        findChildrenByType(rule, 'firstExpression')
-          .concat(findChildrenByType(rule, 'otherExpression'));
+      let expressions = findChildrenByType(rule, 'firstExpression').concat(findChildrenByType(rule, 'otherExpression'));
 
       let bnf = [];
 

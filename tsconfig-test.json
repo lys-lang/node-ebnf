@@ -7,13 +7,9 @@
     "experimentalDecorators": true,
     "inlineSourceMap": false,
     "inlineSources": false,
-    "sourceMap": true,
+    "sourceMap": false,
     "types": []
   },
-  "exclude": [
-    "../src"
-  ],
-  "include": [
-    "test/**/*"
-  ]
+  "exclude": ["../src"],
+  "include": ["test/**/*"]
 }

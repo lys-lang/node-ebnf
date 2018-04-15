@@ -40,8 +40,6 @@ describe('Parse BNF', () => {
   testParseToken(lispParser, '(test a)');
 });
 
-
-
 describe('Parse custom calculator', () => {
   let calc = `
     <Document>         ::= <Equation> <EOF>

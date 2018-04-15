@@ -17,14 +17,7 @@
     "type": "git",
     "url": "git+https://github.com/menduz/node-ebnf.git"
   },
-  "keywords": [
-    "EBNF",
-    "AST",
-    "Parser",
-    "Grammar",
-    "Lexer",
-    "Syntax"
-  ],
+  "keywords": ["EBNF", "AST", "Parser", "Grammar", "Lexer", "Syntax"],
   "author": {
     "name": "Agustin Mendez @menduz",
     "email": "agustin.mz.92@gmail.com",
@@ -45,5 +38,10 @@
   },
   "dependencies": {
     "colors": "^1.1.2"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": true,
+    "printWidth": 120
   }
 }

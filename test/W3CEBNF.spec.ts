@@ -5,7 +5,6 @@ import { testParseToken, describeTree, printBNF } from './TestHelpers';
 
 let inspect = require('util').inspect;
 
-
 let grammar = `
 Grammar ::= RULE_S* (Production RULE_S*)*  EOF
 Production ::= NCName RULE_S* "::=" RULE_WHITESPACE* Choice RULE_WHITESPACE* RULE_EOL+ RULE_S*
@@ -31,7 +30,6 @@ Link ::= '[' Url ']'
 Url ::= [^#x5D:\/?#] "://" [^#x5D#]+ ("#" NCName)?
   `;
 
-
 describe('Parse W3CEBNF', () => {
   let parser: Parser;
 
@@ -43,7 +41,7 @@ describe('Parse W3CEBNF', () => {
   });
 });
 
-describe('Grammars.W3C parses itself', function () {
+describe('Grammars.W3C parses itself', function() {
   let RULES = Grammars.W3C.getRules(grammar);
   let parser = new Parser(RULES, {});
 

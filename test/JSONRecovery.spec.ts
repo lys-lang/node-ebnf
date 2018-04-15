@@ -6,7 +6,6 @@ import { testParseTokenFailsafe, describeTree, printBNF, testParseToken } from '
 let inspect = require('util').inspect;
 let expect = require('expect');
 
-
 let grammar = `
 /* https://www.ietf.org/rfc/rfc4627.txt */
 value                ::= false | null | true | object | number | string | array
@@ -50,76 +49,76 @@ describe('JSON 2', () => {
     });
   });
 
-  describe('Grammars.Custom parses JSON grammar', function () {
+  describe('Grammars.Custom parses JSON grammar', function() {
     let parser = new Grammars.Custom.Parser(grammar, {});
 
     printBNF(parser);
 
-    testParseTokenFailsafe(parser, '{"b": ZZZZ}', null, (doc) => {
+    testParseTokenFailsafe(parser, '{"b": ZZZZ}', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '[ZZZZ]', null, (doc) => {
+    testParseTokenFailsafe(parser, '[ZZZZ]', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '[ZZZZ', null, (doc) => {
+    testParseTokenFailsafe(parser, '[ZZZZ', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.children[0].type).toEqual('array');
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '{"s": true', null, (doc) => {
+    testParseTokenFailsafe(parser, '{"s": true', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.children[0].type).toEqual('object');
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('');
     });
 
-    testParseTokenFailsafe(parser, '{"s": true, ZZZZ', null, (doc) => {
+    testParseTokenFailsafe(parser, '{"s": true, ZZZZ', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.children[0].type).toEqual('object');
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual(', ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '{"s": true, ZZZZ, "b": false', null, (doc) => {
+    testParseTokenFailsafe(parser, '{"s": true, ZZZZ, "b": false', null, doc => {
       expect(doc.errors.length).toEqual(2);
       expect(doc.children[0].type).toEqual('object');
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '[1, ZZZZ]', null, (doc) => {
+    testParseTokenFailsafe(parser, '[1, ZZZZ]', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '[1, ZZZZ, 1]', null, (doc) => {
+    testParseTokenFailsafe(parser, '[1, ZZZZ, 1]', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '[ZZZZ, 1]', null, (doc) => {
+    testParseTokenFailsafe(parser, '[ZZZZ, 1]', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '{"b": ZZZZ, "c": true}', null, (doc) => {
+    testParseTokenFailsafe(parser, '{"b": ZZZZ, "c": true}', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');
     });
 
-    testParseTokenFailsafe(parser, '{"a":false,"b": ZZZZ,"list":[1,2,3,true]}', null, (doc) => {
+    testParseTokenFailsafe(parser, '{"a":false,"b": ZZZZ,"list":[1,2,3,true]}', null, doc => {
       expect(doc.errors.length).toEqual(1);
       expect(doc.errors[0].token.type).toEqual('SyntaxError');
       expect(doc.errors[0].token.text).toEqual('ZZZZ');

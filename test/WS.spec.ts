@@ -5,7 +5,6 @@ import { testParseToken, describeTree, printBNF } from './TestHelpers';
 
 let inspect = require('util').inspect;
 
-
 let grammar = `
 { ws=implicit }
 /* https://www.ietf.org/rfc/rfc4627.txt */
@@ -42,7 +41,7 @@ describe('WS', () => {
     });
   });
 
-  describe('Grammars.W3C parses JSON grammar', function () {
+  describe('Grammars.W3C parses JSON grammar', function() {
     let RULES = Grammars.Custom.getRules(grammar);
     console.log('JSON:\n' + inspect(RULES, false, 20, true));
     let parser = new Parser(RULES, {});
@@ -52,24 +51,32 @@ describe('WS', () => {
     testParseToken(parser, JSON.stringify(true, null, 2));
     testParseToken(parser, JSON.stringify(false, null, 2));
     testParseToken(parser, JSON.stringify(null, null, 2));
-    testParseToken(parser, JSON.stringify("", null, 2));
-    testParseToken(parser, JSON.stringify("\"", null, 2));
-    testParseToken(parser, JSON.stringify("\"{}", null, 2));
+    testParseToken(parser, JSON.stringify('', null, 2));
+    testParseToken(parser, JSON.stringify('"', null, 2));
+    testParseToken(parser, JSON.stringify('"{}', null, 2));
     testParseToken(parser, JSON.stringify(10, null, 2));
     testParseToken(parser, JSON.stringify(-10, null, 2));
     testParseToken(parser, JSON.stringify(-10.1, null, 2));
 
-    testParseToken(parser, JSON.stringify(10.1E123, null, 2));
+    testParseToken(parser, JSON.stringify(10.1e123, null, 2));
 
     testParseToken(parser, JSON.stringify({}, null, 2));
     testParseToken(parser, '{  "a": true       }');
     testParseToken(parser, JSON.stringify({ a: false }, null, 2));
 
-    testParseToken(parser, JSON.stringify({
-      a: false, b: `asd
-      asd `, list: [1, 2, 3, true]
-    }, null, 2));
-
+    testParseToken(
+      parser,
+      JSON.stringify(
+        {
+          a: false,
+          b: `asd
+      asd `,
+          list: [1, 2, 3, true]
+        },
+        null,
+        2
+      )
+    );
 
     testParseToken(parser, JSON.stringify([]));
     testParseToken(parser, JSON.stringify([{}], null, 2));
