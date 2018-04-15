@@ -1,4 +1,5 @@
 "use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.printBNF = function (parser) { return console.log(parser.emitSource()); };
 var inspect = require('util').inspect;
 function testParseToken(parser, txt, target, customTest) {

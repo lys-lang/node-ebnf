@@ -1,6 +1,7 @@
 "use strict";
-var dist_1 = require('../dist');
-var TestHelpers_1 = require('./TestHelpers');
+Object.defineProperty(exports, "__esModule", { value: true });
+var dist_1 = require("../dist");
+var TestHelpers_1 = require("./TestHelpers");
 var inspect = require('util').inspect;
 var grammar = "\n{ ws=implicit }\n/* https://www.ietf.org/rfc/rfc4627.txt */\nvalue                ::= false | null | true | object | array | number | string\nBEGIN_ARRAY          ::= #x5B  /* [ left square bracket */\nBEGIN_OBJECT         ::= #x7B  /* { left curly bracket */\nEND_ARRAY            ::= #x5D  /* ] right square bracket */\nEND_OBJECT           ::= #x7D  /* } right curly bracket */\nNAME_SEPARATOR       ::= #x3A  /* : colon */\nVALUE_SEPARATOR      ::= #x2C  /* , comma */\nWS                   ::= [#x20#x09#x0A#x0D]+   /* Space | Tab | \n | \r */\nfalse                ::= \"false\"\nnull                 ::= \"null\"\ntrue                 ::= \"true\"\nobject               ::= BEGIN_OBJECT (member (VALUE_SEPARATOR member)*)? END_OBJECT\nmember               ::= string NAME_SEPARATOR value\narray                ::= BEGIN_ARRAY (value (VALUE_SEPARATOR value)*)? END_ARRAY\n\nnumber                ::= \"-\"? (\"0\" | [1-9] [0-9]*) (\".\" [0-9]+)? ((\"e\" | \"E\") ( \"-\" | \"+\" )? (\"0\" | [1-9] [0-9]*))? {ws=explicit}\n\n/* STRINGS */\n\nstring                ::= '\"' (([#x20-#x21] | [#x23-#x5B] | [#x5D-#xFFFF]) | #x5C (#x22 | #x5C | #x2F | #x62 | #x66 | #x6E | #x72 | #x74 | #x75 HEXDIG HEXDIG HEXDIG HEXDIG))* '\"' {ws=explicit}\nHEXDIG                ::= [a-fA-F0-9] {ws=explicit}\n  ";
 describe('WS', function () {

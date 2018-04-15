@@ -374,7 +374,7 @@ export class Parser {
                 got = got || this.parse(tmpTxt, localTarget.name, recursion + 1);
 
                 // rule ::= "true" ![a-zA-Z]
-                // negative lookup, if it does not matches, we should continue
+                // negative lookup, if it does not match, we should continue
                 if (localTarget.lookupNegative) {
                   if (got)
                     return /* cancel this path */;

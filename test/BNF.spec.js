@@ -1,6 +1,7 @@
 "use strict";
-var dist_1 = require('../dist');
-var TestHelpers_1 = require('./TestHelpers');
+Object.defineProperty(exports, "__esModule", { value: true });
+var dist_1 = require("../dist");
+var TestHelpers_1 = require("./TestHelpers");
 var inspect = require('util').inspect;
 var lexer = dist_1.Grammars.BNF.RULES;
 var parser = new dist_1.Parser(dist_1.Grammars.BNF.RULES, {});

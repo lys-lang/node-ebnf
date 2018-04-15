@@ -1,6 +1,7 @@
 "use strict";
-var dist_1 = require('../dist');
-var TestHelpers_1 = require('./TestHelpers');
+Object.defineProperty(exports, "__esModule", { value: true });
+var dist_1 = require("../dist");
+var TestHelpers_1 = require("./TestHelpers");
 var inspect = require('util').inspect;
 var expect = require('expect');
 describe('Lookahead Negative', function () {
@@ -122,5 +123,5 @@ describe('Lookahead Positive', function () {
 //   printBNF(parser);
 //   parser.debug = true;
 //   testParseToken(parser, 'hi');
-// }); 
+// });
 //# sourceMappingURL=Lookahead.spec.js.map
