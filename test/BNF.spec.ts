@@ -8,7 +8,7 @@ let inspect = require('util').inspect;
 let lexer = Grammars.BNF.RULES;
 let parser = new Parser(Grammars.BNF.RULES, {});
 
-printBNF(parser);
+// printBNF(parser);
 
 parser.debug = true;
 

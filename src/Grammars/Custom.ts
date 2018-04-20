@@ -76,7 +76,7 @@ namespace BNF {
     },
     {
       name: '%_Choice_1',
-      bnf: [['RULE_WHITESPACE*', '"|"', 'RULE_WHITESPACE*', 'SequenceOrDifference']],
+      bnf: [['RULE_S*', '"|"', 'RULE_S*', 'SequenceOrDifference']],
       fragment: true
     },
     {
@@ -112,7 +112,7 @@ namespace BNF {
     },
     {
       name: 'SubItem',
-      bnf: [['"("', 'RULE_WHITESPACE*', '%Choice', 'RULE_WHITESPACE*', '")"']]
+      bnf: [['"("', 'RULE_S*', '%Choice', 'RULE_S*', '")"']]
     },
     {
       name: 'StringLiteral',
@@ -383,6 +383,8 @@ namespace BNF {
     }
 
     rule.fragment = rule.fragment || attributes['fragment'] == 'true';
+
+    rule.simplifyWhenOneChildren = attributes['simplifyWhenOneChildren'] == 'true';
 
     tmpRules.push(rule);
   }

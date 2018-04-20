@@ -53,7 +53,7 @@ describe('JSON', () => {
 
     let parser = new Parser(RULES, {});
 
-    printBNF(parser);
+    // printBNF(parser);
 
     testParseToken(parser, JSON.stringify(true));
     testParseToken(parser, JSON.stringify(false));

@@ -52,7 +52,7 @@ describe('JSON 2', () => {
   describe('Grammars.Custom parses JSON grammar', function() {
     let parser = new Grammars.Custom.Parser(grammar, {});
 
-    printBNF(parser);
+    // printBNF(parser);
 
     testParseTokenFailsafe(parser, '{"b": ZZZZ}', null, doc => {
       expect(doc.errors.length).toEqual(1);

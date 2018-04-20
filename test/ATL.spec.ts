@@ -49,10 +49,10 @@ UNESCAPED       ::= [#x20-#x21] | [#x23-#x5B] | [#x5D-#xFFFF]
 describe('ATL', () => {
   describe('Grammars.Custom parses ATL Expressions', function() {
     let RULES = Grammars.Custom.getRules(grammar);
-    console.log('JSON:\n' + inspect(RULES, false, 20, true));
+    // console.log('JSON:\n' + inspect(RULES, false, 20, true));
     let parser = new Parser(RULES, {});
 
-    printBNF(parser);
+    // printBNF(parser);
 
     testParseToken(parser, JSON.stringify(true, null, 2));
 

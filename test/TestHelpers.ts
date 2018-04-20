@@ -38,14 +38,16 @@ export function testParseTokenFailsafe(
 
       if (customTest) customTest(result);
     } catch (e) {
-      parser.debug = true;
-      try {
-        result = parser.getAST(txt, target);
-        console.log(txt + '\n' + inspect(result, false, 20, true));
-      } catch (ee) {
-        console.log(ee);
-      }
-      parser.debug = false;
+      console.error(e);
+      // parser.debug = true;
+      // try {
+      //   // result = parser.getAST(txt, target);
+      //   console.log(txt + '\n' + inspect(result, false, 20, true));
+      // } catch (ee) {
+      //   console.(ee);
+      // }
+      // parser.debug = false;
+      describeTree(result);
       throw e;
     }
 
@@ -53,21 +55,16 @@ export function testParseTokenFailsafe(
   });
 }
 
-function printDescription(token: IToken, maxLength: number) {
-  if (/\n/.test(token.text)) return;
+function printAST(token: IToken, level = 0) {
   console.log(
-    '         ' +
-    new Array(token.start + 1).join(' ') +
-    token.text + // new Array(token.text.length + 1).join('^')
-      new Array(maxLength - token.end + 2).join(' ') +
-      token.type
+    '         ' + '  '.repeat(level) + `|-${token.type}${token.children.length == 0 ? '=' + token.text : ''}`
   );
   token.children &&
     token.children.forEach(c => {
-      printDescription(c, maxLength);
+      printAST(c, level + 1);
     });
 }
 
 export function describeTree(token: IToken) {
-  printDescription(token, token.text.length);
+  printAST(token);
 }

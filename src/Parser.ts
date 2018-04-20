@@ -18,6 +18,7 @@ export interface IRule {
   fragment?: boolean;
   pinned?: number;
   implicitWs?: boolean;
+  simplifyWhenOneChildren?: boolean;
 }
 
 export interface IToken {
@@ -30,8 +31,8 @@ export interface IToken {
   fullText: string;
   errors: TokenError[];
   rest: string;
-  fragment?: true;
-  lookup?: true;
+  fragment?: boolean;
+  lookup?: boolean;
 }
 
 export function readToken(txt: string, expr: RegExp): IToken {
@@ -141,7 +142,7 @@ export class Parser {
       let parsedName = parseRuleName(rule.name);
 
       if (parsedName.name in this.cachedRules) {
-        errors.push('Duplicated rule ' + name);
+        errors.push('Duplicated rule ' + parsedName.name);
         return;
       } else {
         this.cachedRules[parsedName.name] = rule;
@@ -215,7 +216,7 @@ export class Parser {
       let rest = result.rest;
 
       if (rest) {
-        new TokenError('Unexpected end of input: ' + JSON.stringify(rest) + txt, result);
+        new TokenError('Unexpected end of input: \n' + rest, result);
       }
 
       fixRest(result);
@@ -231,7 +232,7 @@ export class Parser {
   }
 
   parse(txt: string, target: string, recursion = 0): IToken {
-    let out = null;
+    let out: IToken = null;
 
     let type = parseRuleName(target);
 
@@ -305,7 +306,7 @@ export class Parser {
         options.forEach(phases => {
           if (out) return;
 
-          let pinned = false;
+          let pinned: IToken = null;
 
           let tmp: IToken = {
             type: type.name,
@@ -384,7 +385,7 @@ export class Parser {
                 }
 
                 if (got && targetLex.pinned == i + 1) {
-                  pinned = true;
+                  pinned = got;
                   printable && console.log(new Array(recursion + 1).join('│  ') + '└─ ' + got.type + ' PINNED');
                 }
 
@@ -404,7 +405,11 @@ export class Parser {
                       start: 0,
                       rest: ''
                     };
-                    new TokenError('Unexpected end of input: ' + tmpTxt, got);
+                    if (tmpTxt.length) {
+                      new TokenError(`Unexpected end of input. Expecting ${localTarget.name} Got: ${tmpTxt}`, got);
+                    } else {
+                      new TokenError(`Unexpected end of input. Missing ${localTarget.name}`, got);
+                    }
                     printable &&
                       console.log(
                         new Array(recursion + 1).join('│  ') + '└─ ' + got.type + ' ' + JSON.stringify(got.text)
@@ -484,12 +489,17 @@ export class Parser {
 
           if (foundSomething) {
             out = tmp;
+
             printable &&
               console.log(
                 new Array(recursion).join('│  ') + '├<─┴< PUSHING ' + out.type + ' ' + JSON.stringify(out.text)
               );
           }
         });
+      }
+
+      if (out && targetLex.simplifyWhenOneChildren && out.children.length == 1) {
+        out = out.children[0];
       }
     }
 
@@ -531,7 +541,7 @@ export class Parser {
         got = this.parse(tmpTxt, recoverableToken.recover, recursion + 1);
 
         if (got) {
-          new TokenError('Unexpected input: ' + tmp.text, tmp);
+          new TokenError('Unexpected input: "' + tmp.text + `" Expecting: ${recoverableToken.name}`, tmp);
           break;
         } else {
           tmp.text = tmp.text + tmpTxt[0];

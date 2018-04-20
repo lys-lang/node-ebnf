@@ -16,7 +16,7 @@ describe('Lookahead Negative', () => {
     {}
   );
 
-  printBNF(parser);
+  // printBNF(parser);
 
   testParseToken(parser, 'true', 'Boolean', doc => {
     expect(doc.type).toEqual('Boolean');
@@ -80,7 +80,7 @@ describe('Lookahead Positive', () => {
     {}
   );
 
-  printBNF(parser);
+  // printBNF(parser);
 
   testParseToken(parser, 'true', 'Boolean', doc => {
     expect(doc.type).toEqual('Boolean');

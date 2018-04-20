@@ -42,10 +42,10 @@ describe('JSON 2', () => {
 
   describe('Grammars.W3C parses JSON grammar', function() {
     let RULES = Grammars.W3C.getRules(grammar);
-    console.log('JSON:\n' + inspect(RULES, false, 20, true));
+    // console.log('JSON:\n' + inspect(RULES, false, 20, true));
     let parser = new Parser(RULES, {});
 
-    printBNF(parser);
+    // printBNF(parser);
 
     testParseToken(parser, JSON.stringify(true));
     testParseToken(parser, JSON.stringify(false));

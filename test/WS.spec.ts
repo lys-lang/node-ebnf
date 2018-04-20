@@ -41,12 +41,12 @@ describe('WS', () => {
     });
   });
 
-  describe('Grammars.W3C parses JSON grammar', function() {
+  describe('Grammars.Custom parses JSON grammar', function() {
     let RULES = Grammars.Custom.getRules(grammar);
-    console.log('JSON:\n' + inspect(RULES, false, 20, true));
+    // console.log('JSON:\n' + inspect(RULES, false, 20, true));
     let parser = new Parser(RULES, {});
 
-    printBNF(parser);
+    // printBNF(parser);
 
     testParseToken(parser, JSON.stringify(true, null, 2));
     testParseToken(parser, JSON.stringify(false, null, 2));
