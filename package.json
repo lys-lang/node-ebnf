@@ -1,6 +1,6 @@
 {
   "name": "ebnf",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Creates an AST parser from a [E]BNF file",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -12,14 +12,20 @@
     "coverage": "(`npm bin`/istanbul cover `npm bin`/_mocha || true)",
     "lint": "tslint -t msbuild src/**/*.ts",
     "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-test.json && chmod +x dist/bin.js",
-    "watch":
-      "npm run build && chmod +x dist/bin.js && (tsc -p tsconfig.json --watch & tsc -p tsconfig-test.json --watch)"
+    "watch": "npm run build && chmod +x dist/bin.js && (tsc -p tsconfig.json --watch & tsc -p tsconfig-test.json --watch)"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/menduz/node-ebnf.git"
   },
-  "keywords": ["EBNF", "AST", "Parser", "Grammar", "Lexer", "Syntax"],
+  "keywords": [
+    "EBNF",
+    "AST",
+    "Parser",
+    "Grammar",
+    "Lexer",
+    "Syntax"
+  ],
   "author": {
     "name": "Agustin Mendez @menduz",
     "email": "agustin.mz.92@gmail.com",
