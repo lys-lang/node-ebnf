@@ -18,8 +18,7 @@
 // RULE_S	::=	#x9 | #xA | #xD | #x20
 // Comment	::=	'/*' ( [^*] | '*'+ [^*/] )* '*'* '*/'
 
-import { IRule, Parser as _Parser, IToken } from '..';
-import { findRuleByName } from '../Parser';
+import { IRule, Parser as _Parser, IToken, findRuleByName } from '../Parser';
 
 namespace BNF {
   export const RULES: IRule[] = [

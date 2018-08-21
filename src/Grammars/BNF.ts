@@ -21,7 +21,7 @@ RULE_CHAR ::= RULE_LETTER | RULE_DIGIT | "_" | "-"
 
 import { findChildrenByType } from '../SemanticHelpers';
 
-import { IRule, Parser as _Parser, IToken } from '..';
+import { IRule, Parser as _Parser, IToken } from '../Parser';
 
 namespace BNF {
   export const RULES: IRule[] = [
