@@ -1,7 +1,5 @@
 // https://www.ics.uci.edu/~pattis/ICS-33/lectures/ebnf.pdf
 
-declare var global;
-
 const UPPER_SNAKE_RE = /^[A-Z0-9_]+$/;
 const decorationRE = /(\?|\+|\*)$/;
 const preDecorationRE = /^(@|&|!)/;
@@ -269,7 +267,8 @@ export class Parser {
 
     try {
       if (!targetLex && type.isLiteral) {
-        let src = global.eval(type.name);
+        // tslint:disable-next-line: no-eval
+        let src = eval(type.name);
 
         if (src === '') {
           return {
@@ -289,6 +288,9 @@ export class Parser {
         realType = null;
       }
     } catch (e) {
+      if (e instanceof ReferenceError) {
+        console.error(e);
+      }
       return null;
     }
 
