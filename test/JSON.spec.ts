@@ -51,9 +51,7 @@ describe('JSON', () => {
   describe('Grammars.W3C parses JSON grammar', function() {
     let RULES = Grammars.W3C.getRules(grammar);
 
-    let parser = new Parser(RULES, {});
-
-    // printBNF(parser);
+    let parser = new Parser(RULES, {debug: true});
 
     testParseToken(parser, JSON.stringify(true));
     testParseToken(parser, JSON.stringify(false));
@@ -65,15 +63,12 @@ describe('JSON', () => {
     testParseToken(parser, JSON.stringify(-10));
     testParseToken(parser, JSON.stringify(-10.1));
 
-    parser.debug = true;
     testParseToken(parser, JSON.stringify(10.1e123));
-    parser.debug = false;
 
     testParseToken(parser, JSON.stringify({}));
     testParseToken(parser, JSON.stringify({ a: true }));
     testParseToken(parser, JSON.stringify({ a: false }));
 
-    parser.debug = true;
     testParseToken(
       parser,
       JSON.stringify({
@@ -83,7 +78,6 @@ describe('JSON', () => {
         list: [1, 2, 3, true]
       })
     );
-    parser.debug = false;
 
     testParseToken(parser, JSON.stringify([]));
     testParseToken(parser, JSON.stringify([{}]));
