@@ -30,7 +30,7 @@ In this example we use plain BNF to create a simple integer formula parser
 
 Grammar:
 
-```bnf
+```ebnf
 <Equation>         ::= <BinaryOperation> | <Term>
 <Term>             ::= "(" <RULE_WHITESPACE> <Equation> <RULE_WHITESPACE> ")" | "(" <RULE_WHITESPACE> <Number> <RULE_WHITESPACE> ")" | <RULE_WHITESPACE> <Number> <RULE_WHITESPACE>
 <BinaryOperation>  ::= <Term> <RULE_WHITESPACE> <Operator> <RULE_WHITESPACE> <Term>
@@ -84,7 +84,7 @@ parser.getAST( '(2 + (2 * -123)) * 5332');
 
 ## JSON example
 
-```bnf
+```wbnf
 /* https://www.ietf.org/rfc/rfc4627.txt */
 value                ::= false | null | true | object | array | number | string
 BEGIN_ARRAY          ::= WS* #x5B WS*  /* [ left square bracket */
