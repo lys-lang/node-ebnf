@@ -27,8 +27,6 @@ source = path.resolve(process.cwd(), source);
 
 let sourceCode = fs.readFileSync(source).toString() + '\n';
 
-Grammars.Custom.parser.debug = false;
-
 let RULES = Grammars.Custom.getRules(sourceCode);
 
 console.log(`*/

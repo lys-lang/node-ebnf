@@ -22,6 +22,7 @@ RULE_CHAR ::= RULE_LETTER | RULE_DIGIT | "_" | "-"
 import { findChildrenByType } from '../SemanticHelpers';
 
 import { IRule, Parser as _Parser, IToken } from '../Parser';
+import { IGrammarParserOptions } from './types';
 
 namespace BNF {
   export const RULES: IRule[] = [
@@ -191,7 +192,7 @@ namespace BNF {
     }
   ];
 
-  export const parser = new _Parser(RULES, {});
+  export const defaultParser = new _Parser(RULES, { debug: false });
 
   function getAllTerms(expr: IToken): string[] {
     let terms = findChildrenByType(expr, 'term').map(term => {
@@ -205,7 +206,7 @@ namespace BNF {
     return terms;
   }
 
-  export function getRules(source: string): IRule[] {
+  export function getRules(source: string, parser: _Parser = defaultParser): IRule[] {
     let ast = parser.getAST(source);
 
     if (!ast) throw new Error('Could not parse ' + source);
@@ -243,13 +244,16 @@ namespace BNF {
     return ret;
   }
 
-  export function Transform(source: TemplateStringsArray): IRule[] {
-    return getRules(source.join(''));
+  export function Transform(source: TemplateStringsArray, subParser: _Parser = defaultParser): IRule[] {
+    return getRules(source.join(''), subParser);
   }
 
   export class Parser extends _Parser {
-    constructor(public source: string, options) {
-      super(getRules(source), options);
+    private readonly source: string;
+    constructor(source: string, options?: Partial<IGrammarParserOptions>) {
+      const subParser = options && options.debugRulesParser === true ? new _Parser(BNF.RULES, { debug: true }) : defaultParser;
+      super(getRules(source, subParser), options);
+      this.source = source;
     }
 
     emitSource(): string {

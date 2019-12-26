@@ -44,7 +44,7 @@ describe('JSON 2', () => {
     let parser: Parser;
 
     it('create parser', () => {
-      printBNF(Grammars.Custom.parser);
+      printBNF(Grammars.Custom.defaultParser);
       // console.dir(Grammars.Custom.getRules(grammar));
     });
   });

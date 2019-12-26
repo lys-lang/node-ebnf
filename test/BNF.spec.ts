@@ -8,10 +8,6 @@ let inspect = require('util').inspect;
 let lexer = Grammars.BNF.RULES;
 let parser = new Parser(Grammars.BNF.RULES, {});
 
-// printBNF(parser);
-
-parser.debug = true;
-
 describe('Parse BNF', () => {
   let lisp = `
     <lisp-document>  ::= <s_expression> <lisp-document> | <RULE_WHITESPACE> | <s_expression> <EOF> | <EOF>
@@ -29,12 +25,12 @@ describe('Parse BNF', () => {
   let lispParser: Parser;
 
   it('creates a LISP parser', () => {
-    lispParser = new Grammars.BNF.Parser(lisp, {});
+    lispParser = new Grammars.BNF.Parser(lisp);
 
     printBNF(lispParser);
   });
 
-  lispParser = new Grammars.BNF.Parser(lisp, {});
+  lispParser = new Grammars.BNF.Parser(lisp);
 
   testParseToken(lispParser, 'test');
   testParseToken(lispParser, '(test a)');
@@ -61,12 +57,12 @@ describe('Parse custom calculator', () => {
   let calcuParser: Parser;
 
   it('creates a calculator parser', () => {
-    calcuParser = new Grammars.BNF.Parser(calc, {});
+    calcuParser = new Grammars.BNF.Parser(calc, {debug: false});
 
     printBNF(calcuParser);
   });
 
-  calcuParser = new Grammars.BNF.Parser(calc, {});
+  calcuParser = new Grammars.BNF.Parser(calc, {debug: false});
 
   testParseToken(calcuParser, '1');
   testParseToken(calcuParser, '0');

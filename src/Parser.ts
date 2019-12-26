@@ -124,14 +124,19 @@ function stripRules(token: IToken, re: RegExp) {
 export interface IDictionary<T> {
   [s: string]: T;
 }
+export interface IParserOptions {
+  keepUpperRules: boolean;
+  debug: boolean;
+}
 
 const ignoreMissingRules = ['EOF'];
 
 export class Parser {
-  debug = false;
+  private readonly debug;
 
   cachedRules: IDictionary<IRule> = {};
-  constructor(public grammarRules: IRule[], public options) {
+  constructor(public grammarRules: IRule[], public options?: Partial<IParserOptions>) {
+    this.debug = options ? options.debug === true : false;
     let errors = [];
 
     let neededRules: string[] = [];
