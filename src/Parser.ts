@@ -54,7 +54,7 @@ export function readToken(txt: string, expr: RegExp): IToken {
   return null;
 }
 
-function escapeRegExp(str) {
+export function escapeRegExp(str) {
   return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, '\\$&');
 }
 

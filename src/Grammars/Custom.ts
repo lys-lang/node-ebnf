@@ -19,7 +19,7 @@
 // Comment	::=	'/*' ( [^*] | '*'+ [^*/] )* '*'* '*/'
 
 import { TokenError } from '../TokenError';
-import { IRule, Parser as _Parser, IToken, findRuleByName } from '../Parser';
+import { IRule, Parser as _Parser, IToken, escapeRegExp, findRuleByName } from '../Parser';
 import { IGrammarParserOptions } from './types';
 
 namespace BNF {
@@ -305,8 +305,16 @@ namespace BNF {
           bnfSeq.push(preDecoration + name + decoration);
           break;
         case 'NCName':
-        case 'StringLiteral':
           bnfSeq.push(preDecoration + x.text + decoration);
+          break;
+        case 'StringLiteral':
+          if (decoration || preDecoration || !/^['"/()a-zA-Z0-9&_.:=,+*\-\^\\]+$/.test(x.text)) {
+             bnfSeq.push(preDecoration + x.text + decoration);
+          } else {
+             for (const c of x.text.slice(1, -1)) {
+                bnfSeq.push(new RegExp(escapeRegExp(c)));
+             }
+          }
           break;
         case 'CharCode':
         case 'CharClass':
