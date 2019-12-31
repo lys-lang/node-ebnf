@@ -366,7 +366,7 @@ namespace BNF {
       });
     }
 
-    let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name, parentAttributes ? parentAttributes: attributes));
+    let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name, parentAttributes ? parentAttributes : attributes));
 
     let rule: IRule = {
       name,
