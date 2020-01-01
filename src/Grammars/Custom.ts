@@ -271,7 +271,7 @@ namespace BNF {
     );
   }
 
-  function getSubItems(tmpRules, seq: IToken, parentName: string) {
+  function getSubItems(tmpRules, seq: IToken, parentName: string, parentAttributes: any) {
     let anterior = null;
     let bnfSeq = [];
 
@@ -312,7 +312,12 @@ namespace BNF {
              bnfSeq.push(preDecoration + x.text + decoration);
           } else {
              for (const c of x.text.slice(1, -1)) {
-                bnfSeq.push(new RegExp(escapeRegExp(c)));
+                if (parentAttributes && parentAttributes["ignoreCase"] == "true" && /[a-zA-Z]/.test(c)) {
+                   bnfSeq.push(new RegExp("[" + c.toUpperCase() + c.toLowerCase() + "]"));
+                }
+                else {
+                   bnfSeq.push(new RegExp(escapeRegExp(c)));
+                }
              }
           }
           break;
@@ -332,7 +337,6 @@ namespace BNF {
             bnfSeq.push(convertRegex(x.text));
           }
           break;
-
         case 'PrimaryPreDecoration':
         case 'PrimaryDecoration':
           break;
@@ -346,9 +350,7 @@ namespace BNF {
     return bnfSeq;
   }
 
-  function createRule(tmpRules: any[], token: IToken, name: string) {
-    let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
-
+  function createRule(tmpRules: any[], token: IToken, name: string, parentAttributes: any = undefined) {
     let attrNode = token.children.filter(x => x.type == 'Attributes')[0];
 
     let attributes: any = {};
@@ -363,6 +365,8 @@ namespace BNF {
         }
       });
     }
+
+    let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name, parentAttributes ? parentAttributes : attributes));
 
     let rule: IRule = {
       name,
