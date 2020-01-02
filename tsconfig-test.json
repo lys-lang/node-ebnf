@@ -11,6 +11,6 @@
     "types": [],
     "lib": ["es2017", "dom"]
   },
-  "exclude": ["../src"],
+  "exclude": ["../src", "scripts"],
   "include": ["test/**/*"]
 }
