@@ -1,7 +1,9 @@
 on:
-  push
+  push:
+    branches:
+      - "!master"
 
-name: Test
+name: PR Validations
 jobs:
   install:
     runs-on: ubuntu-latest
