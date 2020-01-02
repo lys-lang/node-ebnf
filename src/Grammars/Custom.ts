@@ -300,7 +300,7 @@ namespace BNF {
         case 'SubItem':
           let name = '%' + (parentName + subitems++);
 
-          createRule(tmpRules, x, name);
+          createRule(tmpRules, x, name, parentAttributes);
 
           bnfSeq.push(preDecoration + name + decoration);
           break;
