@@ -1,9 +1,7 @@
 on:
-  push:
-    branches:
-      - "!master"
+  push
 
-name: PR Validations
+name: Test and release
 jobs:
   install:
     runs-on: ubuntu-latest
@@ -23,3 +21,5 @@ jobs:
         run: npm run coverage
       - name: lint
         run: npm run lint
+      - name: release
+        run: npm run release
