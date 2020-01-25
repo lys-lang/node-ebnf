@@ -293,7 +293,7 @@ namespace BNF {
     return bnfSeq;
   }
 
-  function createRule(tmpRules: any[], token: IToken, name: string) {
+  function createRule(tmpRules: IRule[], token: IToken, name: string) {
     let bnf = token.children.filter(x => x.type == 'SequenceOrDifference').map(s => getSubItems(tmpRules, s, name));
 
     let rule: IRule = {
@@ -324,7 +324,7 @@ namespace BNF {
       throw ast.errors[0];
     }
 
-    let tmpRules = [];
+    let tmpRules : IRule[] = [];
 
     ast.children.filter(x => x.type == 'Production').map((x: any) => {
       let name = x.children.filter(x => x.type == 'NCName')[0].text;
