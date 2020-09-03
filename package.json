@@ -51,9 +51,7 @@
     "tslint": "^5.20.1",
     "typescript": "^3.7.3"
   },
-  "dependencies": {
-    "colors": "^1.4.0"
-  },
+  "dependencies": {},
   "prettier": {
     "semi": true,
     "singleQuote": true,
