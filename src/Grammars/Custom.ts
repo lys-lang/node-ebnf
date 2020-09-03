@@ -271,7 +271,7 @@ namespace BNF {
     );
   }
 
-  function getSubItems(tmpRules, seq: IToken, parentName: string, parentAttributes: any) {
+  function getSubItems(tmpRules : IRule[], seq: IToken, parentName: string, parentAttributes: any) {
     let anterior = null;
     let bnfSeq = [];
 
@@ -290,7 +290,7 @@ namespace BNF {
         preDecoration = anterior.text;
       }
 
-      let pinned = preDecoration == '~';
+      let pinned = preDecoration == '~' ? 1 : undefined;
 
       if (pinned) {
         preDecoration = '';
@@ -324,7 +324,7 @@ namespace BNF {
         case 'CharCode':
         case 'CharClass':
           if (decoration || preDecoration) {
-            let newRule = {
+            let newRule : IRule = {
               name: '%' + (parentName + subitems++),
               bnf: [[convertRegex(x.text)]],
               pinned
@@ -350,7 +350,7 @@ namespace BNF {
     return bnfSeq;
   }
 
-  function createRule(tmpRules: any[], token: IToken, name: string, parentAttributes: any = undefined) {
+  function createRule(tmpRules: IRule[], token: IToken, name: string, parentAttributes: any = undefined) {
     let attrNode = token.children.filter(x => x.type == 'Attributes')[0];
 
     let attributes: any = {};
@@ -430,7 +430,7 @@ namespace BNF {
 
     implicitWs = attributes['ws'] == 'implicit';
 
-    let tmpRules = [];
+    let tmpRules : IRule[] = [];
 
     ast.children.filter(x => x.type == 'Production').map((x: any) => {
       let name = x.children.filter(x => x.type == 'NCName')[0].text;
