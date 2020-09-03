@@ -21,5 +21,7 @@ jobs:
         run: npm run coverage
       - name: lint
         run: npm run lint
-      - name: release
-        run: npm run release
+      - name: Publish
+        uses: menduz/oddish-action@2.0.1
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
