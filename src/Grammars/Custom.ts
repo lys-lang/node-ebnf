@@ -271,7 +271,7 @@ namespace BNF {
     );
   }
 
-  function getSubItems(tmpRules : IRule[], seq: IToken, parentName: string, parentAttributes: any) {
+  function getSubItems(tmpRules: IRule[], seq: IToken, parentName: string, parentAttributes: any) {
     let anterior = null;
     let bnfSeq = [];
 
@@ -324,7 +324,7 @@ namespace BNF {
         case 'CharCode':
         case 'CharClass':
           if (decoration || preDecoration) {
-            let newRule : IRule = {
+            let newRule: IRule = {
               name: '%' + (parentName + subitems++),
               bnf: [[convertRegex(x.text)]],
               pinned
@@ -430,7 +430,7 @@ namespace BNF {
 
     implicitWs = attributes['ws'] == 'implicit';
 
-    let tmpRules : IRule[] = [];
+    let tmpRules: IRule[] = [];
 
     ast.children.filter(x => x.type == 'Production').map((x: any) => {
       let name = x.children.filter(x => x.type == 'NCName')[0].text;

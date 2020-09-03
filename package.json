@@ -11,7 +11,8 @@
     "preversion": "npm run build && npm test",
     "coverage": "(`npm bin`/istanbul cover `npm bin`/_mocha || true)",
     "lint": "tslint -t msbuild src/**/*.ts",
-    "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-test.json && chmod +x dist/bin.js",
+    "lint-fix": "tslint -t msbuild src/**/*.ts --fix",
+    "build": "npm run lint-fix && rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-test.json && chmod +x dist/bin.js",
     "watch": "npm run build && chmod +x dist/bin.js && (tsc -p tsconfig.json --watch & tsc -p tsconfig-test.json --watch)"
   },
   "repository": {

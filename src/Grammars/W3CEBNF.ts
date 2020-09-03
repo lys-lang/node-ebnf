@@ -324,7 +324,7 @@ namespace BNF {
       throw ast.errors[0];
     }
 
-    let tmpRules : IRule[] = [];
+    let tmpRules: IRule[] = [];
 
     ast.children.filter(x => x.type == 'Production').map((x: any) => {
       let name = x.children.filter(x => x.type == 'NCName')[0].text;

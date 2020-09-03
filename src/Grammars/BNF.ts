@@ -217,7 +217,7 @@ namespace BNF {
 
     let rules = findChildrenByType(ast, 'rule');
 
-    let ret = rules.map((rule) : IRule => {
+    let ret = rules.map((rule): IRule => {
       let name = findChildrenByType(rule, 'rule-name')[0].text;
 
       let expressions = findChildrenByType(rule, 'firstExpression').concat(findChildrenByType(rule, 'otherExpression'));
