@@ -12,8 +12,7 @@
     "coverage": "(`npm bin`/istanbul cover `npm bin`/_mocha || true)",
     "lint": "tslint -t msbuild src/**/*.ts",
     "build": "rm -rf dist && tsc -p tsconfig.json && tsc -p tsconfig-test.json && chmod +x dist/bin.js",
-    "watch": "npm run build && chmod +x dist/bin.js && (tsc -p tsconfig.json --watch & tsc -p tsconfig-test.json --watch)",
-    "release": "ts-node scripts/release.ts"
+    "watch": "npm run build && chmod +x dist/bin.js && (tsc -p tsconfig.json --watch & tsc -p tsconfig-test.json --watch)"
   },
   "repository": {
     "type": "git",
