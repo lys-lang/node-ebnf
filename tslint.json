@@ -14,8 +14,6 @@
         "no-internal-module": true,
         "no-trailing-whitespace": true,
         "no-var-keyword": true,
-        "no-use-before-declare": true,
-        "no-unreachable": true,
         "one-line": [
             true,
             "check-open-brace",
