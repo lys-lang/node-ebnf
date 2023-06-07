@@ -272,8 +272,7 @@ export class Parser {
 
     try {
       if (!targetLex && type.isLiteral) {
-        // tslint:disable-next-line: no-eval
-        let src = eval(type.name);
+        let src = type.name.startsWith('"') ? JSON.parse(type.name) : type.name;
 
         if (src === '') {
           return {
