@@ -5,6 +5,9 @@ name: Test and release
 jobs:
   install:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@master
       - name: Use Node.js 12.x
@@ -22,6 +25,8 @@ jobs:
       - name: lint
         run: npm run lint
       - name: Publish
-        uses: menduz/oddish-action@2.0.1
+        uses: menduz/oddish-action@master
+        with:
+          provenance: true
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
