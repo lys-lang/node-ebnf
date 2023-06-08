@@ -279,7 +279,7 @@ export class Parser {
         if (src.startsWith('"')) {
           src = JSON.parse(src);
         } else if (src.startsWith("'")) {
-          src = src.replace(/^'(.+)'$/, '$1').replace('\\\'', "'");
+          src = src.replace(/^'(.+)'$/, '$1').replace(/\\'/g, "'");
         }
 
         if (src === '') {
