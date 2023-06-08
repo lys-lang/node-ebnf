@@ -272,7 +272,15 @@ export class Parser {
 
     try {
       if (!targetLex && type.isLiteral) {
-        let src = type.name.startsWith('"') ? JSON.parse(type.name) : type.name;
+        
+        
+        let src: string = type.name.trim();
+
+        if (src.startsWith('"')) {
+          src = JSON.parse(src);
+        } else if (src.startsWith("'")) {
+          src = src.replace(/^'(.+)'$/, '$1').replace('\\\'', "'");
+        }
 
         if (src === '') {
           return {
